@@ -1,0 +1,78 @@
+<div class="root-container"
+     ng-class="{'root-container-{{vm.theme}}':true}"
+     tabindex="0"
+     style="height: 100%">
+    <table class="rootTable">
+        <tr>
+            <td class="doublePage dimensionList">
+                <div>
+                    <q2g-extension-header max-number-of-elements="4"
+                                            reserved-button-width="0.5"
+                                            title="'Alt State'"
+
+                                            input-accept="vm.inputAcceptDimensions"
+                                            input-cancel="vm.inputCancelDimensions"
+                                            input-field="vm.addState"
+                                            input-bar-visible="vm.showSearchFieldState"
+
+                                            menu-visible="vm.showButtonsState"
+                                            menu-callback="vm.menuListActionCallback(item)"
+                                            menu-list="vm.menuListState"
+                                            
+                                            shortcut-searchfield="'strg + alt + 83'">
+                    </q2g-extension-header>
+                </div>
+                <div>
+                    <q2g-listview style="height: {{vm.elementHeight-42}}px"
+                                tabindex="0"
+                                items="vm.altStateObject.collection"
+                                items-count="vm.altStateObject.itemsCounter"
+                                items-page-top="vm.altStateObject.itemsPagingTop"
+                                items-page-size="vm.altStateObject.itemsPageSize"
+                                item-height="31"
+                                item-focused="vm.focusedPositionDimension"
+                                show-focused="vm.showFocusedDimension"
+                                callback-listview-objects="vm.selectDimensionObjectCallback(pos)"
+                                theme="vm.theme">
+                    </q2g-listview>
+                </div>
+            </td>
+            <td class="doublePage dimensionList">
+                <div>
+                    <q2g-extension-header max-number-of-elements="4"
+                                            reserved-button-width="0.5"
+                                            title="'Alt State'"
+
+                                            input-accept="vm.inputAcceptDimensions"
+                                            input-cancel="vm.inputCancelDimensions"
+                                            input-field="vm.addState"
+                                            input-bar-visible="vm.showSearchFieldState"
+
+                                            menu-visible="vm.showButtonsState"
+                                            menu-callback="vm.menuListActionCallback(item)"
+                                            menu-list="vm.menuListState"
+                                            
+                                            shortcut-searchfield="'strg + alt + 83'">
+                    </q2g-extension-header>
+                </div>
+                <div>
+                    <q2g-listview style="height: {{vm.elementHeight-42}}px"
+                                tabindex="0"
+                                items="vm.qlikObjectObjectv.collection"
+                                items-count="vm.qlikObjectObjectv.itemsCount"
+                                items-page-top="vm.qlikObjectObjectv.itemsPageTop"
+                                items-page-size="vm.qlikObjectObjectv.itemsPageSize"
+                                item-height="31"
+                                item-focused="vm.focusedPositionDimension"
+                                show-focused="vm.showFocusedDimension"
+                                callback-listview-objects="vm.selectDimensionObjectCallback(pos)"
+                                theme="vm.theme">
+                    </q2g-listview>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    
+
+</div>

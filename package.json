@@ -1,17 +1,23 @@
 {
-  "name": "q2g-ext-alternatestates",
+  "name": "q2g-ext-altstate",
   "version": "0.0.1",
   "license": "MIT",
-  "description": "manage alternate states",
+  "description": "controll alternate States",
   "repository": {
     "type": "git",
-    "url": "https://github.com/q2g/q2g-ext-alternatestates"
+    "url": ""
   },
   "author": "Thomas Häning, Konrad Mattheis (qlik2go) ",
   "devDependencies": {
-    "typescript": "^2.6.1"
+    "@types/angular": "1.6.39",
+    "@types/jquery": "3.2.16",
+    "@types/qlik-engineapi": "^12.34.0",
+    "@types/qlik-visualizationextensions": "4.0.2"
+  },
+  "dependencies": {
+    "davinci.js": "^1.0.2"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json"
+    "comp": "tsc -p tsconfig.json"
   }
 }
