@@ -24,6 +24,7 @@ class QlikCollectionObject implements IDataModelItemObject {
     status: string = "O";
     title: string;
     object: EngineAPI.IGenericObject;
+    type: string;
     //#endregion
 
     //#region logger
@@ -65,13 +66,14 @@ class QlikCollectionObject implements IDataModelItemObject {
 
 
                 if (typeof properties.title === "string") {
-
+                        this.type = properties.qInfo.qType;
                         this.title = ((properties.title.length === 0)? "no title": properties.title)
                             + "-" + properties.qInfo.qType+"-"+properties.qInfo.qId+"-"+this.state;
 
                 } else if (typeof properties.title === "object") {
                     object.app.evaluateEx(properties.title.qStringExpression.qExpr)
                         .then((res) => {
+                            this.type = properties.qInfo.qType;
                             this.title = res + "-" + properties.qInfo.qType+"-"+properties.qInfo.qId+"-"+this.state;
                         })
                         .catch((error) => {
@@ -85,6 +87,10 @@ class QlikCollectionObject implements IDataModelItemObject {
 
     }
 
+    /**
+     * change the state of an object
+     * @param stateName name of the alternate state to be set
+     */
     public setState(stateName: string): Promise<boolean> {
         return new Promise((resolve, reject) => {
             let patchObject: EngineAPI.INxPatch = {
@@ -99,8 +105,6 @@ class QlikCollectionObject implements IDataModelItemObject {
 
 class AssistArrayAdapter<T extends directives.IDataModelItem> {
 
-    preClacCollection: Array<T> = [];
-    collection: Array<T>;
     itemsCount: number;
 
     //#region itemsPageSize
@@ -123,7 +127,7 @@ class AssistArrayAdapter<T extends directives.IDataModelItem> {
     //#endregion
 
     //#region itemsPageTop
-    private _itemsPageTop: number;
+    private _itemsPageTop: number = 0;
     public get itemsPageTop(): number {
         return this._itemsPageTop;
     }
@@ -132,7 +136,7 @@ class AssistArrayAdapter<T extends directives.IDataModelItem> {
             this._itemsPageTop = v;
             this.calcDataPages(v, this.itemsPageSize)
                 .then((res: Array<T>) => {
-                    this.collection = res;
+                    this._calcCollection = res;
                 })
                 .catch((error) => {
                     this.logger.error(error);
@@ -142,8 +146,8 @@ class AssistArrayAdapter<T extends directives.IDataModelItem> {
     //#endregion
 
     //#region logger
-    private _logger: logging.Logger;
-    private get logger(): logging.Logger {
+    protected _logger: logging.Logger;
+    protected get logger(): logging.Logger {
         if (!this._logger) {
             try {
                 this._logger = new logging.Logger("AssistArrayAdapter");
@@ -155,17 +159,81 @@ class AssistArrayAdapter<T extends directives.IDataModelItem> {
     }
     //#endregion
 
-    constructor(arr: Array<T>) {
-        this.preClacCollection = arr;
-        this.itemsCount = arr.length;
-        this.itemsPageTop = 0;
-        this.calcDataPages(this.itemsPageTop, this.itemsPageSize);
+    //#region collection
+    private _collection: Array<T> = [];
+    public get collection() : Array<T> {
+        return this._collection;
+    }
+    public set collection(v : Array<T>) {
+        if (v !== this._collection) {
+            this._collection = v;
+        }
+    }
+    //#endregion
+
+    //#region calcCollection
+    protected _calcCollection: Array<T> = [];
+    public get calcCollection() : Array<T> {
+        return this._calcCollection;
+    }
+    //#endregion
+
+    constructor() {
+        this.logger.info("initial of AssistArrayAdapter");
     }
 
-    private calcDataPages(pageTop: number, pageSize: number): Promise<Array<T>> {
+    sort(collection: any) {
+        return collection.sort((a, b) => {
+            if(a.title < b.title) {
+                return -1;
+            }
+            if(a.title > b.title) {
+                return 1;
+            }
+            return 0;
+        });
+    }
+
+    updateCollection(elements: T[]) {
+        this.itemsCount = elements.length;
+        let localCollection = JSON.parse(JSON.stringify(this.collection));
+        for(let element of elements) {
+            let newElement = true;
+            for (let x of this.collection) {
+                if (x.id === element.id) {
+                    newElement = false;
+                    if (x.status !== element.status) {
+                        x = element;
+                    }
+                }
+            }
+            if (newElement) {
+                localCollection.push(element);
+            }
+        }
+        // a MISSED delete not anymore existing entries
+        localCollection = this.sort(localCollection);
+        this._collection = localCollection;
+        this.calcDataPages(this.itemsPageTop, this.itemsPageSize)
+            .then((res) => {
+                this._calcCollection = res;
+            })
+            .catch((error) => {
+                this.logger.error("error in updateCollection", error);
+            });
+    }
+
+    /**
+     * calculates the dataPage to be displayed
+     * @param pageTop first Position of the data page
+     * @param pageSize size of the data page
+     */
+    protected calcDataPages(pageTop: number, pageSize: number): Promise<Array<T>> {
+        console.log("33333333");
         return new Promise((resolve, reject) => {
             try {
-                resolve(this.preClacCollection.slice(pageTop, pageTop + pageSize));
+                console.log("this.collection",this.collection);
+                resolve(this.collection.slice(pageTop, pageTop + pageSize));
             } catch (error) {
                 this.logger.error("Error in getListObjectData", error);
                 reject(error);
@@ -174,7 +242,8 @@ class AssistArrayAdapter<T extends directives.IDataModelItem> {
     }
 
     /**
-     * getObjectById
+     * getObjectById returns an object
+     * @param id id of the object to be returned
      */
     public getObjectById(id: string): Promise<T> {
         return new Promise((resolve, reject) => {
@@ -190,26 +259,77 @@ class AssistArrayAdapter<T extends directives.IDataModelItem> {
             }
         });
     }
+
+    /**
+     * replaces some character
+     * @param qMatch string to be checked
+     */
+    protected replace(qMatch: string): string {
+        return qMatch
+        .replace(/[\-\[\]\/\{\}\(\)\+\?\.\\\^\$\|]/g, "\\$&")
+        .replace(/\*/g, ".*");
+    }
+
+    /**
+     * search the list object for the inserted string
+     * @param qMatch search string to be looked for
+     * @returns a Promise if the search was succesfull
+     */
+    public searchListObjectFor(qMatch: string): Promise<boolean> {
+        return new Promise((resolve, reject) => {
+            try {
+                this._calcCollection = this.collection.filter((element) => {
+                    if (element.title.match(new RegExp(this.replace(qMatch), "i"))) {
+                        return element;
+                    }
+                });
+                resolve(true);
+            } catch (error) {
+                this.logger.error("ERROR", error);
+                reject(error);
+            }
+        });
+    }
 }
 
 class QlikCollection extends AssistArrayAdapter<QlikCollectionObject> {
 
-    constructor(arr: Array<QlikCollectionObject>) {
-        super(arr);
-        // this.sort();
+    private _prefix: string = "$";
+    public get prefix() : string {
+        return this._prefix;
+    }
+    public set prefix(v : string) {
+        this._prefix = v;
+        this.collection = this.sort(this.collection);
+        this.calcDataPages(this.itemsPageTop, this.itemsPageSize)
+            .then((res) => {
+                this._calcCollection = res;
+            })
+            .catch((error) => {
+                this.logger.error("error in updateCollection", error);
+            });
     }
 
-    // sort() {
-    //     this.collection.sort((a, b) => {
-    //         if (a.state < b.state) {
-    //             return -1;
-    //         }
-    //         if (a.state > b.state) {
-    //             return 1;
-    //         }
-    //         return 0;
-    //     });
-    // }
+    constructor() {
+        super();
+    }
+
+    sort(collection: Array<QlikCollectionObject>) {
+        return collection.sort((a, b) => {
+            if (a.state === this.prefix) {
+                if (a.type < b.type) {
+                    return -1;
+                }
+                if (a.type > b.type) {
+                    return 1;
+                }
+                return 0;
+            } else {
+                return 1;
+            }
+        });
+    }
+
 }
 
 const excludedObjects: Array<string> = [
@@ -240,11 +360,11 @@ enum eStateName {
 class AltStateController {
 
     //#region variables
-    altStateObject: AssistArrayAdapter<directives.IDataModelItem>;
-    qlikObject: QlikCollection;
+    timeout: ng.ITimeoutService;
+    altStateObject: AssistArrayAdapter<directives.IDataModelItem> = new AssistArrayAdapter();
+    qlikObject: QlikCollection = new QlikCollection();
     addState: string;
     element: JQuery;
-    timeout: ng.ITimeoutService;
     theme: string;
     editMode: boolean = false;
     menuList: Array<utils.IMenuElement>;
@@ -288,7 +408,7 @@ class AltStateController {
             let that = this;
             let app = v.app;
             app.on("changed", function () {
-                app.getLayout()
+                app.getAppLayout()
                     .then((appLayout: EngineAPI.INxAppLayout) => {
                         let collection: Array<directives.IDataModelItem> = [];
                         collection.push({
@@ -309,14 +429,14 @@ class AltStateController {
                                 title: iterator
                             });
                         }
-                        that.altStateObject = new AssistArrayAdapter(collection);
+                        that.altStateObject.updateCollection(collection);
                     })
                     .catch((error) => {
                         this.logger.error("ERROR in get Layout ", error);
                     });
                 app.getAllInfos()
                     .then((appInfo: EngineAPI.INxInfo[]) => {
-                        let objects: Array<Promise<EngineAPI.IGenericObjectProperties>> = [];
+                        let objects: Array<Promise<void | EngineAPI.IGenericObjectProperties>> = [];
                         let collection: Array<QlikCollectionObject> = [];
                         for (const iterator of appInfo) {
                             if (excludedObjects.indexOf(iterator.qType)===-1) {
@@ -332,7 +452,7 @@ class AltStateController {
                         }
                         Promise.all(objects)
                             .then((res) => {
-                                that.qlikObject = new QlikCollection(collection);
+                                that.qlikObject.updateCollection(collection);
                             })
                             .catch((error) => {
                                 this.logger.error("ERROR IN CATCH",error);
@@ -391,7 +511,14 @@ class AltStateController {
             this._headerInput = v;
             try {
                 if (!(this.inputStates.relStateName === eStateName.addAltState)) {
-                    //
+                    this.altStateObject.searchListObjectFor(!v? "": v)
+                    .then(() => {
+                        this.altStateObject.itemsCount = this.altStateObject.collection.length;
+                        this.timeout();
+                    })
+                    .catch((error) => {
+                        this.logger.error("error", error);
+                    });
                 } else {
                     if(this.menuList[0].isEnabled) {
                         this.menuList[0].isEnabled = false;
@@ -405,13 +532,27 @@ class AltStateController {
     }
     //#endregion
 
-    //#region
+    //#region headerInputObjects
     private _headerInputObjects: string;
     public get headerInputObjects() : string {
         return this._headerInputObjects;
     }
     public set headerInputObjects(v : string) {
-        this._headerInputObjects = v;
+        if (this._headerInputObjects !== v) {
+            this._headerInputObjects = v;
+            try {
+                this.qlikObject.searchListObjectFor(!v? "": v)
+                .then(() => {
+                    this.qlikObject.itemsCount = this.qlikObject.collection.length;
+                    this.timeout();
+                })
+                .catch((error) => {
+                    this.logger.error("error", error);
+                });
+            } catch (error) {
+                this.logger.error("error in setter of headerInput", error);
+            }
+        }
     }
     //#endregion
 
@@ -428,8 +569,11 @@ class AltStateController {
             try {
                 if (element.find(e.target).length === 0) {
                     this.showInputField = false;
+                    this.showInputFieldObjects = false;
                     this.showButtons = false;
-                    this.headerInput= null;
+                    this.showButtonsObjects = false;
+                    this.headerInput = null;
+                    this.headerInputObjects = null;
                     this.timeout();
                 }
             } catch (e) {
@@ -610,6 +754,7 @@ class AltStateController {
             item.status = "A";
         }
         this.altStateObject.collection[pos].status = "S";
+        this.qlikObject.prefix = this.selectedAltState;
     }
 
     /**
