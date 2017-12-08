@@ -11,7 +11,7 @@
                                           title="vm.titleAltState"
                                           theme="vm.theme"
 
-                                          input-accept="vm.extensionHeaderAccept()"
+                                          input-accept="vm.extensionHeaderAccept"
                                           input-field="vm.headerInput"
                                           input-bar-logo="vm.inputStates.relState.icon"
                                           input-bar-placeholder="vm.inputStates.relState.placeholder"
@@ -23,8 +23,15 @@
                                           menu-list="vm.menuList">
                     </q2g-extension-header>
                 </div>
-                <div>
+                <div ng-if="vm.altStateObject.itemsCounter === 0">
+                    <div ng-style="{'height': vm.elementHeight-42+'px'}">
+                        Please create an alternate State
+                    </div>
+                </div>
+                <div ng-if="vm.altStateObject.itemsCounter !== 0">
+                    
                     <q2g-listview ng-style="{'height': vm.elementHeight-42+'px'}"
+                                  
                                   tabindex="0"
 
                                   items="vm.altStateObject.calcCollection"
