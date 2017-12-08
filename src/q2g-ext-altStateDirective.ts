@@ -38,10 +38,9 @@ const excludedObjects: Array<string> = [
     "LoadModel",
     "story",
     "bookmark",
-    "sdf",
-    "q2g-ext-pic-barchart",
+    "sdf",   
     "templateRoot",
-    "q2g-ext-altState"
+    "q2g-ext-alternatestates"
 ];
 
 enum eStateName {
