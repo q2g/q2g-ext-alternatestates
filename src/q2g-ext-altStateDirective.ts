@@ -831,6 +831,17 @@ class AltStateController {
         }
     }
 
+    /**
+     * checks if the extension is used in Edit mode
+     */
+    isEditMode(): boolean {
+        if (this.editMode) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     private addAltState() {
         this.model.app.addAlternateState(this.headerInput);
     }
@@ -942,6 +953,9 @@ class AltStateController {
      * selectObjectCallback
      */
     selectObjectCallback(pos: number) {
+        if (typeof(this.selectedAltState) === "undefined" || this.selectedAltState === "") {
+            return;
+        }
         let selectedObject: QlikCollectionObject = this.qlikObject.calcCollection[pos];
         let indexNewState: number = this.selectedObjects.indexOf(selectedObject.id);
         let indexRootState: number = this.selectedRootObjects.indexOf(selectedObject.id);

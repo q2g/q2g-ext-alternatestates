@@ -1,8 +1,8 @@
-<div class="root-container altStateExtension"
-     ng-class="{'root-container-{{vm.theme}}':true}"
+<div class="altStateExtension"
      tabindex="0"
-     style="height: 100%">
-    <table class="rootTable">
+     style="height: 100%"
+     q2g-shortcut-scope="rootelement">
+    <table>
         <tr>
             <td class="doublePage">
                 <div>
@@ -11,7 +11,7 @@
                                           title="vm.titleAltState"
                                           theme="vm.theme"
 
-                                          input-accept="vm.extensionHeaderAccept"
+                                          input-accept="vm.extensionHeaderAccept()"
                                           input-field="vm.headerInput"
                                           input-bar-logo="vm.inputStates.relState.icon"
                                           input-bar-placeholder="vm.inputStates.relState.placeholder"
@@ -52,7 +52,6 @@
                                             reserved-button-width="0.5"
                                             title="'Selectable Objects'"
 
-                                            input-accept=""
                                             input-field="vm.headerInputObjects"
                                             input-bar-placeholde="search"
                                             input-bar-visible="vm.showInputFieldObjects"
@@ -85,6 +84,5 @@
         </tr>
     </table>
 
-    
-
+    <div ng-if="vm.isEditMode()" class="editMode"></div>
 </div>
