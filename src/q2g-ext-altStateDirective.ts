@@ -844,6 +844,8 @@ class AltStateController {
 
     private addAltState() {
         this.model.app.addAlternateState(this.headerInput);
+        this.headerInput = "";
+        this.showInputField = false;
     }
 
     private removeAltState() {
