@@ -40,14 +40,6 @@ class AlternateStateExtension {
             return true;
         }
     }
-
-    /**
-     * paint
-     */
-    public paint() {
-        console.log("Test");
-    }
-
 }
 
 export = {
