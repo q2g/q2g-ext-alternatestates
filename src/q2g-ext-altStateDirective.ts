@@ -38,7 +38,7 @@ const excludedObjects: Array<string> = [
     "LoadModel",
     "story",
     "bookmark",
-    "sdf",   
+    "sdf",
     "templateRoot",
     "q2g-ext-alternatestates"
 ];
