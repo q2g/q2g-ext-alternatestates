@@ -953,6 +953,9 @@ class AltStateController {
      * selectObjectCallback
      */
     selectObjectCallback(pos: number) {
+        if (typeof(this.selectedAltState) === "undefined" || this.selectedAltState === "") {
+            return;
+        }
         let selectedObject: QlikCollectionObject = this.qlikObject.calcCollection[pos];
         let indexNewState: number = this.selectedObjects.indexOf(selectedObject.id);
         let indexRootState: number = this.selectedRootObjects.indexOf(selectedObject.id);
