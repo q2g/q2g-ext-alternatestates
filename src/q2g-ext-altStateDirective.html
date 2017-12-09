@@ -1,7 +1,8 @@
 <div class="root-container altStateExtension"
      ng-class="{'root-container-{{vm.theme}}':true}"
      tabindex="0"
-     style="height: 100%">
+     style="height: 100%"
+     q2g-shortcut-scope="rootelement">
     <table class="rootTable">
         <tr>
             <td class="doublePage">
@@ -11,7 +12,7 @@
                                           title="vm.titleAltState"
                                           theme="vm.theme"
 
-                                          input-accept="vm.extensionHeaderAccept"
+                                          input-accept="vm.extensionHeaderAccept()"
                                           input-field="vm.headerInput"
                                           input-bar-logo="vm.inputStates.relState.icon"
                                           input-bar-placeholder="vm.inputStates.relState.placeholder"
