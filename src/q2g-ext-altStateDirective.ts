@@ -38,10 +38,9 @@ const excludedObjects: Array<string> = [
     "LoadModel",
     "story",
     "bookmark",
-    "sdf",
-    "q2g-ext-pic-barchart",
+    "sdf",   
     "templateRoot",
-    "q2g-ext-altState"
+    "q2g-ext-alternatestates"
 ];
 
 enum eStateName {
@@ -539,7 +538,8 @@ class AltStateController {
     showInputField: boolean = false;
     inputBarFocus: boolean = false;
     focusedPositionAltState: number;
-    showFocusedAltState: boolean = false;
+    showFocusedAltState: boolean = true;
+    showFocusedObject: boolean = true;
     selectedObjects: Array<string> = [];
     selectedRootObjects: Array<string> = [];
     showInputFieldObjects: boolean = false;
