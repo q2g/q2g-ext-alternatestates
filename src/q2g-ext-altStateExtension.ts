@@ -40,14 +40,29 @@ class AlternateStateExtension {
             return true;
         }
     }
+
+    /**
+     * paint
+     */
+    public paint() {
+        console.log("Test");
+    }
+
 }
 
 export = {
     definition: {},
     initialProperties: {},
     template: template,
+    paint: () => {
+        //
+    },
+    resize: () => {
+        //
+    },
     controller: ["$scope", (scope:utils.IVMScope<AlternateStateExtension>) => {
         console.log("this Extension runs under daVinci Version", version);
         scope.vm = new AlternateStateExtension(utils.getEnigma(scope));
+
     }]
 };
