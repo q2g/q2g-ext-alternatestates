@@ -38,7 +38,7 @@ const excludedObjects: Array<string> = [
     "LoadModel",
     "story",
     "bookmark",
-    "sdf",   
+    "sdf",
     "templateRoot",
     "q2g-ext-alternatestates"
 ];
@@ -844,6 +844,8 @@ class AltStateController {
 
     private addAltState() {
         this.model.app.addAlternateState(this.headerInput);
+        this.headerInput = "";
+        this.showInputField = false;
     }
 
     private removeAltState() {

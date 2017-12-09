@@ -46,6 +46,11 @@ export = {
     definition: {},
     initialProperties: {},
     template: template,
+    support: {
+        snapshot: false,
+        export: false,
+        exportData: false
+    },
     paint: () => {
         //
     },
