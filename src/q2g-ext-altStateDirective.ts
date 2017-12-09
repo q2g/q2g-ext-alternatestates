@@ -831,6 +831,17 @@ class AltStateController {
         }
     }
 
+    /**
+     * checks if the extension is used in Edit mode
+     */
+    isEditMode(): boolean {
+        if (this.editMode) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     private addAltState() {
         this.model.app.addAlternateState(this.headerInput);
     }
