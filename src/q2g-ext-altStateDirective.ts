@@ -530,6 +530,7 @@ class QlikCollection extends AssistArrayAdapter<QlikCollectionObject> {
 class AltStateController {
 
     //#region variables
+    app: EngineAPI.IApp;
     scope: ng.IScope;
     timeout: ng.ITimeoutService;
     altStateObject: AssistArrayAdapter<directives.IDataModelItem>;
@@ -579,9 +580,9 @@ class AltStateController {
         if (v !== this._model) {
             this._model = v;
             let that = this;
-            let app = v.app;
-            app.on("changed", function () {
-                app.getAppLayout()
+            this.app = v.app;
+            this.app.on("changed", function () {
+                this.app.getAppLayout()
                     .then((appLayout: EngineAPI.INxAppLayout) => {
                         let collection: Array<directives.IDataModelItem> = [];
                         for (const iterator of appLayout.qStateNames) {
@@ -603,13 +604,13 @@ class AltStateController {
                     .catch((error) => {
                         console.error("ERROR in get Layout ", error);
                     });
-                app.getAllInfos()
+                this.app.getAllInfos()
                     .then((appInfo: EngineAPI.INxInfo[]) => {
                         let objects: Array<Promise<void | EngineAPI.IGenericObjectProperties>> = [];
                         let collection: Array<QlikCollectionObject> = [];
                         for (const iterator of appInfo) {
                             if (excludedObjects.indexOf(iterator.qType)===-1) {
-                                objects.push(app.getObject(iterator.qId)
+                                objects.push(this.app.getObject(iterator.qId)
                                     .then((res: EngineAPI.IGenericObject) => {
                                         collection.push(new QlikCollectionObject(res));
                                         return res.getProperties();
@@ -624,7 +625,7 @@ class AltStateController {
                                 return that.qlikObject.updateCollection(collection);
                             })
                             .then(() => {
-                                that.scope.$digest();
+                                that.timeout();
                             })
                             .catch((error) => {
                                 console.error("ERROR IN CATCH",error);
@@ -634,7 +635,7 @@ class AltStateController {
                         this.logger.error(error);
                     });
             });
-            app.emit("changed");
+            this.app.emit("changed");
         }
     }
     //#endregion
@@ -825,6 +826,9 @@ class AltStateController {
                 .then((object) => {
                     return object.setState(this.selectedAltState);
                 })
+                .then((object) => {
+                    this.app.emit("changed");
+                })
                 .catch((error) => {
                     this.logger.error("error in applyStates", error);
                 });
@@ -837,6 +841,9 @@ class AltStateController {
                 })
                 .then((object) => {
                     return object.setState("$");
+                })
+                .then((object) => {
+                    this.app.emit("changed");
                 })
                 .catch((error) => {
                     this.logger.error("error in applyStates", error);
