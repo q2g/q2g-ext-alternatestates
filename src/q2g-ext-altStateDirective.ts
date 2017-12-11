@@ -38,8 +38,6 @@ const excludedObjects: Array<string> = [
     "LoadModel",
     "story",
     "bookmark",
-    "sdf",
-    "templateRoot",
     "q2g-ext-alternatestates"
 ];
 
@@ -116,13 +114,13 @@ class QlikCollectionObject implements IDataModelItemObject {
                 if (typeof properties.title === "string") {
                         this.type = properties.qInfo.qType;
                         this.title = ((properties.title.length === 0)? "no title": properties.title)
-                            + "-" + properties.qInfo.qType+"-"+properties.qInfo.qId+"-"+this.state;
+                            + " (" + properties.qInfo.qType+"-"+properties.qInfo.qId+"-"+this.state + ")";
 
                 } else if (typeof properties.title === "object") {
                     object.app.evaluateEx(properties.title.qStringExpression.qExpr)
                         .then((res) => {
                             this.type = properties.qInfo.qType;
-                            this.title = res + "-" + properties.qInfo.qType+"-"+properties.qInfo.qId+"-"+this.state;
+                            this.title = res.qText + " (" + properties.qInfo.qType+"-"+properties.qInfo.qId+"-"+this.state + ")";
                         })
                         .catch((error) => {
                             this.logger.error("error while eval exresison", error);
@@ -164,6 +162,7 @@ class AssistArrayAdapter<T extends directives.IDataModelItem> {
 
     //#region variables
     itemsCount: number;
+    preCalcCollection: Array<T> = [];
     //#endregion
 
     //#region itemsPageSize
@@ -278,7 +277,7 @@ class AssistArrayAdapter<T extends directives.IDataModelItem> {
     protected calcDataPages(pageTop: number, pageSize: number): Promise<Array<T>> {
         return new Promise((resolve, reject) => {
             try {
-                resolve(this.collection.slice(pageTop, pageTop + pageSize));
+                resolve(this.preCalcCollection.slice(pageTop, pageTop + pageSize));
             } catch (error) {
                 this.logger.error("Error in getListObjectData", error);
                 reject(error);
@@ -301,11 +300,13 @@ class AssistArrayAdapter<T extends directives.IDataModelItem> {
                 for (const item of localCollection) {
                     arrToBeDeleated.push(item.id);
                 }
+
                 for(let element of elements) {
                     let indexDelete: number = arrToBeDeleated.indexOf(element.id);
                     arrToBeDeleated.splice(indexDelete, 1);
 
                     let newElement = true;
+
                     for (let x of this.collection) {
                         if (x.id === element.id) {
                             newElement = false;
@@ -329,9 +330,9 @@ class AssistArrayAdapter<T extends directives.IDataModelItem> {
                     }
                 }
 
-
                 localCollection = this.sort(localCollection);
                 this._collection = localCollection;
+                this.preCalcCollection = localCollection;
                 this.calcDataPages(this.itemsPageTop, this.itemsPageSize)
                     .then((res) => {
                         this._calcCollection = res;
@@ -372,12 +373,20 @@ class AssistArrayAdapter<T extends directives.IDataModelItem> {
     searchListObjectFor(qMatch: string): Promise<boolean> {
         return new Promise((resolve, reject) => {
             try {
-                this._calcCollection = this.collection.filter((element) => {
+                this.preCalcCollection = this.collection.filter((element) => {
                     if (element.title.match(new RegExp(this.replace(qMatch), "i"))) {
                         return element;
                     }
                 });
-                resolve(true);
+                this.calcDataPages(this.itemsPageTop, this.itemsPageSize)
+                    .then((res) => {
+                        this._calcCollection = res;
+                        resolve(true);
+                    })
+                    .catch((error) => {
+                        this.logger.error("ERROR", error);
+                        reject(error);
+                    });
             } catch (error) {
                 this.logger.error("ERROR", error);
                 reject(error);
@@ -500,6 +509,7 @@ class QlikCollection extends AssistArrayAdapter<QlikCollectionObject> {
 
                 localCollection = this.sort(localCollection);
                 this._collection = localCollection;
+                this.preCalcCollection = localCollection;
                 this.calcDataPages(this.itemsPageTop, this.itemsPageSize)
                     .then((res) => {
                         this._calcCollection = res;
@@ -520,6 +530,7 @@ class QlikCollection extends AssistArrayAdapter<QlikCollectionObject> {
 class AltStateController {
 
     //#region variables
+    app: EngineAPI.IApp;
     scope: ng.IScope;
     timeout: ng.ITimeoutService;
     altStateObject: AssistArrayAdapter<directives.IDataModelItem>;
@@ -569,9 +580,9 @@ class AltStateController {
         if (v !== this._model) {
             this._model = v;
             let that = this;
-            let app = v.app;
-            app.on("changed", function () {
-                app.getAppLayout()
+            this.app = v.app;
+            this.app.on("changed", function () {
+                this.app.getAppLayout()
                     .then((appLayout: EngineAPI.INxAppLayout) => {
                         let collection: Array<directives.IDataModelItem> = [];
                         for (const iterator of appLayout.qStateNames) {
@@ -591,21 +602,21 @@ class AltStateController {
                         that.scope.$digest();
                     })
                     .catch((error) => {
-                        this.logger.error("ERROR in get Layout ", error);
+                        console.error("ERROR in get Layout ", error);
                     });
-                app.getAllInfos()
+                this.app.getAllInfos()
                     .then((appInfo: EngineAPI.INxInfo[]) => {
                         let objects: Array<Promise<void | EngineAPI.IGenericObjectProperties>> = [];
                         let collection: Array<QlikCollectionObject> = [];
                         for (const iterator of appInfo) {
                             if (excludedObjects.indexOf(iterator.qType)===-1) {
-                                objects.push(app.getObject(iterator.qId)
+                                objects.push(this.app.getObject(iterator.qId)
                                     .then((res: EngineAPI.IGenericObject) => {
                                         collection.push(new QlikCollectionObject(res));
                                         return res.getProperties();
                                     })
                                     .catch((error) => {
-                                        this.logger.error("ERROR",error);
+                                        console.error("ERROR",error);
                                     }));
                             }
                         }
@@ -614,7 +625,7 @@ class AltStateController {
                                 return that.qlikObject.updateCollection(collection);
                             })
                             .then(() => {
-                                that.scope.$digest();
+                                that.timeout();
                             })
                             .catch((error) => {
                                 console.error("ERROR IN CATCH",error);
@@ -624,7 +635,7 @@ class AltStateController {
                         this.logger.error(error);
                     });
             });
-            app.emit("changed");
+            this.app.emit("changed");
         }
     }
     //#endregion
@@ -675,7 +686,7 @@ class AltStateController {
                 if (!(this.inputStates.relStateName === eStateName.addAltState)) {
                     this.altStateObject.searchListObjectFor(!v? "": v)
                     .then(() => {
-                        this.altStateObject.itemsCount = this.altStateObject.collection.length;
+                        this.altStateObject.itemsCount = this.altStateObject.preCalcCollection.length;
                         this.timeout();
                     })
                     .catch((error) => {
@@ -705,7 +716,7 @@ class AltStateController {
             try {
                 this.qlikObject.searchListObjectFor(!v? "": v)
                 .then(() => {
-                    this.qlikObject.itemsCount = this.qlikObject.collection.length;
+                    this.qlikObject.itemsCount = this.qlikObject.preCalcCollection.length;
                     this.timeout();
                 })
                 .catch((error) => {
@@ -747,7 +758,7 @@ class AltStateController {
         });
 
         scope.$watch(() => {
-            return this.element.width();
+            return this.element.height();
         }, () => {
             this.elementHeight = this.element.height();
         });
@@ -803,6 +814,9 @@ class AltStateController {
         });
     }
 
+    /**
+     * applys the selected state to the selected objects
+     */
     private applyState() {
         for (const item of this.selectedObjects) {
             this.model.app.getObject(item)
@@ -811,6 +825,9 @@ class AltStateController {
                 })
                 .then((object) => {
                     return object.setState(this.selectedAltState);
+                })
+                .then((object) => {
+                    this.app.emit("changed");
                 })
                 .catch((error) => {
                     this.logger.error("error in applyStates", error);
@@ -825,6 +842,9 @@ class AltStateController {
                 .then((object) => {
                     return object.setState("$");
                 })
+                .then((object) => {
+                    this.app.emit("changed");
+                })
                 .catch((error) => {
                     this.logger.error("error in applyStates", error);
                 });
@@ -832,28 +852,26 @@ class AltStateController {
     }
 
     /**
-     * checks if the extension is used in Edit mode
+     * adds a alternate state to the app
      */
-    isEditMode(): boolean {
-        if (this.editMode) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
     private addAltState() {
         this.model.app.addAlternateState(this.headerInput);
         this.headerInput = "";
         this.showInputField = false;
     }
 
+    /**
+     * removes a slternate state from the app
+     */
     private removeAltState() {
         if (this.selectedAltState) {
             this.model.app.removeAlternateState(this.selectedAltState);
         }
     }
 
+    /**
+     * link actions to the buttens in the header directive
+     */
     private applyButtonAction() {
         if(this.inputStates.relStateName === eStateName.addAltState) {
             this.addAltState();
@@ -898,6 +916,21 @@ class AltStateController {
         this.inputStates.relStateName = null;
     }
 
+    /**
+     * checks if the extension is used in Edit mode
+     */
+    isEditMode(): boolean {
+        if (this.editMode) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * links functions to menu list
+     * @param input element returns from the extension header
+     */
     menuListActionCallback(input: string): void {
         switch (input) {
             case "Remove Alternate State":
@@ -914,6 +947,10 @@ class AltStateController {
         }
     }
 
+    /**
+     * links functions to menu list
+     * @param input element returns from the extension header
+     */
     menuListObjecsActionCallback(input: string): void {
         switch (input) {
             case "Apply State":
@@ -948,7 +985,15 @@ class AltStateController {
         this.qlikObject.prefix = this.selectedAltState;
         this.selectedObjects = [];
         this.selectedRootObjects = [];
-        this.timeout();
+        this.qlikObject.itemsPageTop = 0;
+        this.qlikObject.searchListObjectFor(!this.headerInputObjects? "": this.headerInputObjects)
+            .then(() => {
+                this.qlikObject.itemsCount = this.qlikObject.preCalcCollection.length;
+                this.timeout();
+            })
+            .catch((error) => {
+                this.logger.error("error", error);
+            });
     }
 
     /**
@@ -963,8 +1008,8 @@ class AltStateController {
         let indexRootState: number = this.selectedRootObjects.indexOf(selectedObject.id);
 
 
-        if (indexNewState>-1) {
-            this.selectedRootObjects.splice(indexNewState,1);
+        if (indexRootState>-1) {
+            this.selectedRootObjects.splice(indexRootState,1);
             selectedObject.status = "S";
 
         } else if (selectedObject.status === "S" && selectedObject.state !== "$") {
