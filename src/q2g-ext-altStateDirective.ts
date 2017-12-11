@@ -120,7 +120,7 @@ class QlikCollectionObject implements IDataModelItemObject {
                     object.app.evaluateEx(properties.title.qStringExpression.qExpr)
                         .then((res) => {
                             this.type = properties.qInfo.qType;
-                            this.title = res + " (" + properties.qInfo.qType+"-"+properties.qInfo.qId+"-"+this.state + ")";
+                            this.title = res.qText + " (" + properties.qInfo.qType+"-"+properties.qInfo.qId+"-"+this.state + ")";
                         })
                         .catch((error) => {
                             this.logger.error("error while eval exresison", error);
@@ -373,7 +373,6 @@ class AssistArrayAdapter<T extends directives.IDataModelItem> {
     searchListObjectFor(qMatch: string): Promise<boolean> {
         return new Promise((resolve, reject) => {
             try {
-                console.log("this.preCalcCollection", this.preCalcCollection);
                 this.preCalcCollection = this.collection.filter((element) => {
                     if (element.title.match(new RegExp(this.replace(qMatch), "i"))) {
                         return element;
@@ -493,7 +492,6 @@ class QlikCollection extends AssistArrayAdapter<QlikCollectionObject> {
                         }
                     }
                     if (newElement) {
-                        console.log(newElement);
                         localCollection.push(element);
                     }
                 }
