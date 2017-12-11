@@ -758,7 +758,7 @@ class AltStateController {
         });
 
         scope.$watch(() => {
-            return this.element.width();
+            return this.element.height();
         }, () => {
             this.elementHeight = this.element.height();
         });
@@ -1008,8 +1008,8 @@ class AltStateController {
         let indexRootState: number = this.selectedRootObjects.indexOf(selectedObject.id);
 
 
-        if (indexNewState>-1) {
-            this.selectedRootObjects.splice(indexNewState,1);
+        if (indexRootState>-1) {
+            this.selectedRootObjects.splice(indexRootState,1);
             selectedObject.status = "S";
 
         } else if (selectedObject.status === "S" && selectedObject.state !== "$") {
