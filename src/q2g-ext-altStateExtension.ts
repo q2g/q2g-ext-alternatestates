@@ -20,6 +20,18 @@ var $injector = qvangular.$injector;
 utils.checkDirectiveIsRegistrated($injector, qvangular, "", AltStateDirectiveFactory("Altstateextension"),
     "AltStateExtension");
 
+    //#region extension properties
+let parameter = {
+    type: "items",
+    component: "accordion",
+    items: {
+        settings: {
+            uses: "settings"
+        }
+    }
+};
+//#endregion
+
 class AlternateStateExtension {
 
     model: EngineAPI.IGenericObject;
@@ -43,7 +55,7 @@ class AlternateStateExtension {
 }
 
 export = {
-    definition: {},
+    definition: parameter,
     initialProperties: {},
     template: template,
     support: {
