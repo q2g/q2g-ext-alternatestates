@@ -573,8 +573,6 @@ class AltStateController {
             this._selectedAltState = v;
             this.menuList[2].isEnabled = false;
             this.menuList = JSON.parse(JSON.stringify(this.menuList));
-
-            // this.menuList = { ...this.menuList };
         }
     }
     //#endregion
@@ -700,7 +698,6 @@ class AltStateController {
                     if(this.menuList[0].isEnabled) {
                         this.menuList[0].isEnabled = false;
                         this.menuList = JSON.parse(JSON.stringify(this.menuList));
-                        // this.menuList = { ...this.menuList };
                     }
                 }
             } catch (error) {
@@ -962,6 +959,7 @@ class AltStateController {
                 this.applyState();
                 this.selectedObjects = [];
                 this.selectedRootObjects = [];
+                this.headerInputObjects = "";
                 this.timeout();
                 break;
         }
@@ -1037,7 +1035,6 @@ class AltStateController {
             this.menuListObjects[0].isEnabled = true;
         }
         this.menuListObjects = JSON.parse(JSON.stringify(this.menuListObjects));
-        // this.menuListObjects = { ...this.menuListObjects };
     }
 }
 
