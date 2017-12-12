@@ -586,12 +586,11 @@ class AltStateController {
     public set model(v: EngineAPI.IGenericObject) {
         if (v !== this._model) {
             this._model = v;
-            let that = this;
+            let that: AltStateController = this;
             this.app = v.app;
             this.app.on("changed", function () {
                 this.app.getAppLayout()
                     .then((appLayout: EngineAPI.INxAppLayout) => {
-                        let objects: Array<Promise<void | EngineAPI.IGenericObjectProperties>> = [];
                         let collection: Array<directives.IDataModelItem> = [];
                         for (const iterator of appLayout.qStateNames) {
                             collection.push({
@@ -606,7 +605,9 @@ class AltStateController {
                         return that.altStateObject.updateCollection(collection);
                     })
                     .then(() => {
-                        that.selectAltStateObjectCallback(0);
+                        if (that.altStateObject.collection.length > 0) {
+                            that.selectAltStateObjectCallback(0);
+                        }
                     })
                     .catch((error) => {
                         console.error("ERROR in get Layout ", error);
@@ -868,7 +869,13 @@ class AltStateController {
      */
     private removeAltState() {
         if (this.selectedAltState) {
-            this.model.app.removeAlternateState(this.selectedAltState);
+            this.model.app.removeAlternateState(this.selectedAltState)
+                .then(() => {
+                    this.selectedAltState = "";
+                })
+                .catch((error) => {
+                    this.logger.error("Error in removeAltState", error);
+                });
         }
     }
 
