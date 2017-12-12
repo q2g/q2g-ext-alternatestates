@@ -342,6 +342,7 @@ class AssistArrayAdapter<T extends directives.IDataModelItem> {
                 this.calcDataPages(this.itemsPageTop, this.itemsPageSize)
                     .then((res) => {
                         this._calcCollection = res;
+                        resolve();
                     })
                     .catch((error) => {
                         this.logger.error("error in updateCollection", error);
@@ -590,6 +591,7 @@ class AltStateController {
             this.app.on("changed", function () {
                 this.app.getAppLayout()
                     .then((appLayout: EngineAPI.INxAppLayout) => {
+                        let objects: Array<Promise<void | EngineAPI.IGenericObjectProperties>> = [];
                         let collection: Array<directives.IDataModelItem> = [];
                         for (const iterator of appLayout.qStateNames) {
                             collection.push({
@@ -602,10 +604,9 @@ class AltStateController {
                             });
                         }
                         return that.altStateObject.updateCollection(collection);
-                        // scope.$digest();
                     })
                     .then(() => {
-                        that.scope.$digest();
+                        that.selectAltStateObjectCallback(0);
                     })
                     .catch((error) => {
                         console.error("ERROR in get Layout ", error);
