@@ -18,7 +18,7 @@ interface IDataModelItemObject extends directives.IDataModelItem {
     /**
      * name of the patch operateion (Add, Remove, Reset)
      */
-    patchOperation?: EngineAPI.NxPatchOpType;
+    patchOperation?: string;
 }
 //#endregion
 
@@ -58,7 +58,7 @@ class QlikCollectionObject implements IDataModelItemObject {
     fieldDef: string;
     hasFocus: boolean = false;
     id: string;
-    patchOperation: EngineAPI.NxPatchOpType;
+    patchOperation: string;
     path: string;
     qElementNumber: number;
     state: string = "$";
@@ -100,14 +100,20 @@ class QlikCollectionObject implements IDataModelItemObject {
                         if (properties.qHyperCubeDef.qStateName) {
                             this.state = properties.qHyperCubeDef.qStateName;
                         }
-                        this.patchOperation = (properties.qHyperCubeDef.qStateName !== "$")? "Replace": "Add";
+                        this.patchOperation = (properties.qHyperCubeDef.qStateName !== "$")? "replace": "add";
                     }
                 } else if (properties.qListObjectDef) {
                     this.path = "/qListObjectDef/qStateName";
                     if (properties.qListObjectDef.qStateName) {
                         this.state = properties.qListObjectDef.qStateName;
                     }
-                    this.patchOperation = (properties.qListObjectDef.qStateName !== "$")? "Replace": "Add";
+                    this.patchOperation = (properties.qListObjectDef.qStateName !== "$")? "replace": "add";
+                } else if (properties.qChildListDef) {
+                    this.path = "/qChildListDef/qStateName";
+                    if (properties.qChildListDef.qStateName) {
+                        this.state = properties.qChildListDef.qStateName;
+                    }
+                    this.patchOperation = (properties.qChildListDef.qStateName !== "$")? "replace": "add";
                 }
 
 
@@ -138,12 +144,12 @@ class QlikCollectionObject implements IDataModelItemObject {
      */
     public setState(stateName: string): Promise<boolean> {
         return new Promise((resolve, reject) => {
-            let patchObject: EngineAPI.INxPatch = {
-                qOp: this.patchOperation,
+            let patchObject = {
                 qPath: this.path,
+                // qOp: this.patchOperation,
                 qValue: "\""+stateName+"\""
             };
-            this.object.applyPatches([patchObject])
+            this.object.applyPatches([(patchObject as any)])
                 .then(() => {
                     resolve(true);
                 })
@@ -567,6 +573,8 @@ class AltStateController {
             this._selectedAltState = v;
             this.menuList[2].isEnabled = false;
             this.menuList = JSON.parse(JSON.stringify(this.menuList));
+
+            // this.menuList = { ...this.menuList };
         }
     }
     //#endregion
@@ -649,10 +657,6 @@ class AltStateController {
         if (this.elementHeight !== value) {
             try {
                 this._elementHeight = value;
-
-                // if (this.altStateObject) {
-                //     this.altStateObject.emit("changed", utils.calcNumbreOfVisRows(this.elementHeight));
-                // }
             } catch (err) {
                 this.logger.error("error in setter of elementHeight", err);
             }
@@ -696,6 +700,7 @@ class AltStateController {
                     if(this.menuList[0].isEnabled) {
                         this.menuList[0].isEnabled = false;
                         this.menuList = JSON.parse(JSON.stringify(this.menuList));
+                        // this.menuList = { ...this.menuList };
                     }
                 }
             } catch (error) {
@@ -1032,6 +1037,7 @@ class AltStateController {
             this.menuListObjects[0].isEnabled = true;
         }
         this.menuListObjects = JSON.parse(JSON.stringify(this.menuListObjects));
+        // this.menuListObjects = { ...this.menuListObjects };
     }
 }
 
