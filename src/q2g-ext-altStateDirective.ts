@@ -561,7 +561,7 @@ class AltStateController {
     //#endregion
 
     //#region selectedAltState
-    private _selectedAltState: string;
+    private _selectedAltState: string = "";
     public get selectedAltState() : string {
         return this._selectedAltState;
     }
@@ -601,7 +601,7 @@ class AltStateController {
                         return that.altStateObject.updateCollection(collection);
                     })
                     .then(() => {
-                        if (that.altStateObject.collection.length > 0) {
+                        if (that.altStateObject.collection.length > 0 && that.selectedAltState === "") {
                             that.selectAltStateObjectCallback(0);
                         }
                     })
