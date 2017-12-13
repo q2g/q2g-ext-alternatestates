@@ -291,7 +291,7 @@ class AssistArrayAdapter<T extends directives.IDataModelItem> {
      * updates the existing collection
      * @param elements the new Array which should include in the update of the old collection
      */
-    updateCollection(elements: T[]): Promise<void> {
+    updateCollection(elements: T[]): Promise<boolean> {
         return new Promise((resolve, reject) => {
             try {
                 this.itemsCount = elements.length;
@@ -469,7 +469,7 @@ class QlikCollection extends AssistArrayAdapter<QlikCollectionObject> {
      * updates the existing collection
      * @param elements the new Array which should include in the update of the old collection
      */
-    updateCollection(elements: QlikCollectionObject[]): Promise<void> {
+    updateCollection(elements: QlikCollectionObject[]): Promise<boolean> {
         return new Promise((resolve, reject) => {
             try {
                 this.itemsCount = elements.length;
