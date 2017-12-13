@@ -18,7 +18,7 @@ interface IDataModelItemObject extends directives.IDataModelItem {
     /**
      * name of the patch operateion (Add, Remove, Reset)
      */
-    patchOperation?: string;
+    patchOperation?: EngineAPI.NxPatchOpType;
 }
 //#endregion
 
@@ -58,7 +58,7 @@ class QlikCollectionObject implements IDataModelItemObject {
     fieldDef: string;
     hasFocus: boolean = false;
     id: string;
-    patchOperation: string;
+    patchOperation: EngineAPI.NxPatchOpType;
     path: string;
     qElementNumber: number;
     state: string = "$";
@@ -97,26 +97,22 @@ class QlikCollectionObject implements IDataModelItemObject {
                 if (properties.qHyperCubeDef) {
                     this.path = "/qHyperCubeDef/qStateName";
                     if (properties.qHyperCubeDef.qStateName) {
-                        if (properties.qHyperCubeDef.qStateName) {
-                            this.state = properties.qHyperCubeDef.qStateName;
-                        }
-                        this.patchOperation = (properties.qHyperCubeDef.qStateName !== "$")? "replace": "add";
+                        this.state = properties.qHyperCubeDef.qStateName;
                     }
+                        this.patchOperation = (typeof(properties.qHyperCubeDef.qStateName) === "undefined")? "Add": "Replace";
                 } else if (properties.qListObjectDef) {
                     this.path = "/qListObjectDef/qStateName";
                     if (properties.qListObjectDef.qStateName) {
                         this.state = properties.qListObjectDef.qStateName;
                     }
-                    this.patchOperation = (properties.qListObjectDef.qStateName !== "$")? "replace": "add";
+                    this.patchOperation = (typeof(properties.qListObjectDef.qStateName) === "undefined")? "Add": "Replace";
                 } else if (properties.qChildListDef) {
                     this.path = "/qChildListDef/qStateName";
                     if (properties.qChildListDef.qStateName) {
                         this.state = properties.qChildListDef.qStateName;
                     }
-                    this.patchOperation = (properties.qChildListDef.qStateName !== "$")? "replace": "add";
+                    this.patchOperation = (typeof(properties.qChildListDef.qStateName) === "undefined")? "Add": "Replace";
                 }
-
-
                 if (typeof properties.title === "string") {
                         this.type = properties.qInfo.qType;
                         this.title = ((properties.title.length === 0)? "no title": properties.title)
@@ -144,12 +140,12 @@ class QlikCollectionObject implements IDataModelItemObject {
      */
     public setState(stateName: string): Promise<boolean> {
         return new Promise((resolve, reject) => {
-            let patchObject = {
+            let patchObject: EngineAPI.INxPatch = {
                 qPath: this.path,
-                // qOp: this.patchOperation,
+                qOp: this.patchOperation,
                 qValue: "\""+stateName+"\""
             };
-            this.object.applyPatches([(patchObject as any)])
+            this.object.applyPatches([patchObject], false)
                 .then(() => {
                     resolve(true);
                 })
@@ -342,6 +338,7 @@ class AssistArrayAdapter<T extends directives.IDataModelItem> {
                 this.calcDataPages(this.itemsPageTop, this.itemsPageSize)
                     .then((res) => {
                         this._calcCollection = res;
+                        resolve();
                     })
                     .catch((error) => {
                         this.logger.error("error in updateCollection", error);
@@ -585,7 +582,7 @@ class AltStateController {
     public set model(v: EngineAPI.IGenericObject) {
         if (v !== this._model) {
             this._model = v;
-            let that = this;
+            let that: AltStateController = this;
             this.app = v.app;
             this.app.on("changed", function () {
                 this.app.getAppLayout()
@@ -602,10 +599,11 @@ class AltStateController {
                             });
                         }
                         return that.altStateObject.updateCollection(collection);
-                        // scope.$digest();
                     })
                     .then(() => {
-                        that.scope.$digest();
+                        if (that.altStateObject.collection.length > 0) {
+                            that.selectAltStateObjectCallback(0);
+                        }
                     })
                     .catch((error) => {
                         console.error("ERROR in get Layout ", error);
@@ -867,7 +865,13 @@ class AltStateController {
      */
     private removeAltState() {
         if (this.selectedAltState) {
-            this.model.app.removeAlternateState(this.selectedAltState);
+            this.model.app.removeAlternateState(this.selectedAltState)
+                .then(() => {
+                    this.selectedAltState = "";
+                })
+                .catch((error) => {
+                    this.logger.error("Error in removeAltState", error);
+                });
         }
     }
 
