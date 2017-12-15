@@ -855,9 +855,14 @@ class AltStateController {
      * adds a alternate state to the app
      */
     private addAltState() {
-        this.model.app.addAlternateState(this.headerInput);
-        this.headerInput = "";
-        this.showInputField = false;
+        this.model.app.addAlternateState(this.headerInput)
+            .then(() => {
+                this.headerInput = "";
+                this.showInputField = false;
+            })
+            .catch((error) => {
+                this.logger.error("error in addAltState", error);
+            });
     }
 
     /**
@@ -1040,6 +1045,37 @@ class AltStateController {
         }
         this.menuListObjects = JSON.parse(JSON.stringify(this.menuListObjects));
     }
+
+    /**
+     * shortcuthandler to clears the made selection
+     * @param objectShortcut object wich gives you the shortcut name and the element, from which the shortcut come from
+     */
+    shortcutHandler(shortcutObject: directives.IShortcutObject, domcontainer: utils.IDomContainer): boolean {
+
+        switch (shortcutObject.name) {
+            case "escAltState":
+                try {
+                    if (this.headerInput === "") {
+                        this.showInputField = false;
+                    }
+                    return true;
+                } catch (e) {
+                    this.logger.error("Error in shortcutHandlerExtensionHeader", e);
+                    return false;
+                }
+
+            case "escObjects":
+                try {
+                    if (this.headerInputObjects === "") {
+                        this.showInputFieldObjects = false;
+                    }
+                    return true;
+                } catch (e) {
+                    this.logger.error("Error in shortcutHandlerExtensionHeader", e);
+                    return false;
+                }
+        }
+    }
 }
 
 export function AltStateDirectiveFactory(rootNameSpace: string): ng.IDirectiveFactory {
@@ -1061,6 +1097,8 @@ export function AltStateDirectiveFactory(rootNameSpace: string): ng.IDirectiveFa
                     directives.ListViewDirectiveFactory(rootNameSpace), "Listview");
                 utils.checkDirectiveIsRegistrated($injector, $registrationProvider, rootNameSpace,
                     directives.ExtensionHeaderDirectiveFactory(rootNameSpace), "ExtensionHeader");
+                utils.checkDirectiveIsRegistrated($injector, $registrationProvider, rootNameSpace,
+                    directives.ShortCutDirectiveFactory(rootNameSpace), "Shortcut");
             }
         };
     };
