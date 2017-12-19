@@ -1,14 +1,19 @@
 # Alternate States Extension
 [![Greenkeeper badge](https://badges.greenkeeper.io/q2g/q2g-ext-alternatestates.svg)](https://greenkeeper.io/)
 [![TravisCI](https://travis-ci.org/q2g/q2g-ext-alternatestates.svg?branch=master)](https://travis-ci.org/q2g/q2g-ext-alternatestates)
+[![Downloads](https://m.sense2go.net/downloads.svg?q2g-ext-alternatestates)](https://m.sense2go.net/extension-package)
 
 This extensions developed to get alternate states running in Qlik Sense
+
+## Intro
+
+![teaser](https://github.com/q2g/q2g-ext-alternatestates/raw/master/docs/teaser.gif "Short teaser")
 
 ## Install
 
 ### binary
 
-1. [Download the ZIP](DISABLED_https://m.sense2go.net/extension-package) and unzip
+1. [Download the ZIP](https://m.sense2go.net/extension-package) and unzip
 2. Qlik Sense Desktop
    Copy it to: %homeptah%\Documents\Qlik\Sense\Extensions and unzip
 3. Qlik Sense Entripse
