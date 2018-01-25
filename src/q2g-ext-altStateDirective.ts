@@ -1,11 +1,13 @@
 //#region variables
-import { utils, directives, logging } from "../node_modules/davinci.js/dist/daVinci";
-import * as template from "text!./q2g-ext-altStateDirective.html";
+import { utils,
+         directives,
+         logging }          from "../node_modules/davinci.js/dist/umd/daVinci";
+import * as template        from "text!./q2g-ext-altStateDirective.html";
 import "css!./q2g-ext-altStateDirective.css";
+import { checkDirectiveIsRegistrated } from "../node_modules/davinci.js/dist/umd/utils/utils";
 //#endregion
 
 //#region interfaces
-
 interface IDataModelItemObject extends directives.IDataModelItem {
     /**
      * name of the state
@@ -558,6 +560,7 @@ class AltStateController {
     selectedRootObjects: Array<string> = [];
     showInputFieldObjects: boolean = false;
     inputBarFocusObjects: boolean = false;
+    warningMsg: string;
     //#endregion
 
     //#region selectedAltState
@@ -629,6 +632,7 @@ class AltStateController {
                                 return that.qlikObject.updateCollection(collection);
                             })
                             .then(() => {
+                                that.warningMsg = that.createWarningMessage();
                                 that.timeout();
                             })
                             .catch((error) => {
@@ -763,6 +767,8 @@ class AltStateController {
             this.elementHeight = this.element.height();
         });
     }
+
+    //#region private functions
 
     /**
      * fills the Menu with Elements
@@ -928,6 +934,49 @@ class AltStateController {
     }
 
     /**
+     * checks if all linked alternate states exists in the app
+     */
+    private checkForMissingAlternateStates(): Array<string> {
+        let listOfMissingAltStates: Array<string> = [];
+        for (const object of this.qlikObject.collection) {
+            let checker: boolean = false;
+            if (object.state === "$") {
+                continue;
+            }
+
+            for (const altStateObject of this.altStateObject.collection) {
+                if (altStateObject.title === object.state || object.state === "$") {
+                    checker = true;
+                    break;
+                }
+            }
+            if (!checker) {
+                listOfMissingAltStates.push(object.title);
+            }
+        }
+
+        return listOfMissingAltStates;
+    }
+
+    /**
+     * creates the warning message when objects have no registrated states
+     */
+    private createWarningMessage(): string {
+        let msg: string = "";
+        let missingAltState: Array<string> = this.checkForMissingAlternateStates();
+
+        if (missingAltState.length > 0) {
+            let states: string = missingAltState.join("; ");
+            msg = `WARNING objects have not registrated states (${states}).`;
+        }
+
+        return msg;
+    }
+
+    //#endregion
+
+    //#region public functions
+    /**
      * checks if the extension is used in Edit mode
      */
     isEditMode(): boolean {
@@ -1076,6 +1125,8 @@ class AltStateController {
                 }
         }
     }
+
+    //#endregion
 }
 
 export function AltStateDirectiveFactory(rootNameSpace: string): ng.IDirectiveFactory {
