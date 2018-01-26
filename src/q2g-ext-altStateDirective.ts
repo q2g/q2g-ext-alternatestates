@@ -86,6 +86,7 @@ class AltStateController {
         return this._model;
     }
     public set model(v: EngineAPI.IGenericObject) {
+        console.log("öpoiasudhgu", v);
         if (v !== this._model) {
             this._model = v;
             let that: AltStateController = this;
