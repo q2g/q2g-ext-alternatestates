@@ -20,13 +20,83 @@ var $injector = qvangular.$injector;
 utils.checkDirectiveIsRegistrated($injector, qvangular, "", AltStateDirectiveFactory("Altstateextension"),
     "AltStateExtension");
 
-    //#region extension properties
+//#region extension properties
 let parameter = {
     type: "items",
     component: "accordion",
     items: {
         settings: {
-            uses: "settings"
+            uses: "settings",
+            items: {
+                accessibility: {
+                    type: "items",
+                    label: "Accessibility",
+                    grouped: true,
+                    items: {
+                        shortcuts: {
+                            type: "items",
+                            lable: "shortcuts",
+                            grouped: false,
+                            items: {
+                                ShortcutLable: {
+                                    label: "In the following, you can change the used shortcuts",
+                                    component: "text"
+                                },
+                                shortcutUseDefaults: {
+                                    ref: "properties.shortcutUseDefaults",
+                                    label: "use default shortcuts",
+                                    component: "switch",
+                                    type: "boolean",
+                                    options: [{
+                                        value: true,
+                                        label: "use"
+                                    }, {
+                                        value: false,
+                                        label: "not use"
+                                    }],
+                                    defaultValue: true
+                                },
+                                shortcutFocusAltStateList: {
+                                    ref: "properties.shortcutFocusAltStateList",
+                                    label: "focus alternate state list",
+                                    type: "string",
+                                    defaultValue: "strg + alt + 70",
+                                    show: function (data: any) {
+                                        if (data.properties.shortcutUseDefaults) {
+                                            data.properties.shortcutFocusAltStateList = "strg + alt + 70";
+                                        }
+                                        return !data.properties.shortcutUseDefaults;
+                                    }
+                                },
+                                shortcutFocusSearchField: {
+                                    ref: "properties.shortcutFocusSearchField",
+                                    label: "focus search field",
+                                    type: "string",
+                                    defaultValue: "strg + alt + 83",
+                                    show: function (data: any) {
+                                        if (data.properties.shortcutUseDefaults) {
+                                            data.properties.shortcutFocusSearchField = "strg + alt + 83";
+                                        }
+                                        return !data.properties.shortcutUseDefaults;
+                                    }
+                                },
+                                shortcutFocusObjectList: {
+                                    ref: "properties.shortcutFocusObjectList",
+                                    label: "focus object list",
+                                    type: "string",
+                                    defaultValue: "strg + alt + 87",
+                                    show: function (data: any) {
+                                        if (data.properties.shortcutUseDefaults) {
+                                            data.properties.shortcutFocusObjectList = "strg + alt + 87";
+                                        }
+                                        return !data.properties.shortcutUseDefaults;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 };
