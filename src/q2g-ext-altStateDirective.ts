@@ -159,8 +159,10 @@ class AltStateController {
                                 return that.qlikObject.updateCollection(collection);
                             })
                             .then(() => {
-                                that.warningMsg = that.createWarningMessage();
-                                that.timeout();
+                                that.timeout(300)
+                                .then(() => {
+                                    that.warningMsg = that.createWarningMessage();
+                                });
                             })
                             .catch((error) => {
                                 console.error("ERROR IN CATCH",error);
@@ -465,6 +467,7 @@ class AltStateController {
      */
     private checkForMissingAlternateStates(): Array<string> {
         let listOfMissingAltStates: Array<string> = [];
+
         for (const object of this.qlikObject.collection) {
             let checker: boolean = false;
             if (object.state === "$") {
@@ -477,8 +480,8 @@ class AltStateController {
                     break;
                 }
             }
-            if (!checker) {
-                listOfMissingAltStates.push(object.title);
+            if (!checker && listOfMissingAltStates.indexOf(object.state) === -1) {
+                listOfMissingAltStates.push(object.state);
             }
         }
 
@@ -490,6 +493,7 @@ class AltStateController {
      */
     private createWarningMessage(): string {
         let msg: string = "";
+        setTimeout(500);
         let missingAltState: Array<string> = this.checkForMissingAlternateStates();
 
         if (missingAltState.length > 0) {
