@@ -47,7 +47,6 @@ enum eStateName {
 class AltStateController {
 
     //#region variables
-    addState: string;
     altStateObject: AssistArrayAdapter<directives.IDataModelItem>;
     app: EngineAPI.IApp;
     editMode: boolean = false;
@@ -521,6 +520,7 @@ class AltStateController {
     //#endregion
 
     //#region public functions
+
     /**
      * checks if the extension is used in Edit mode
      */

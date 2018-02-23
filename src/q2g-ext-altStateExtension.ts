@@ -16,9 +16,11 @@ logging.LogConfig.SetLogLevel("*", logging.LogLevel.info);
 let logger = new logging.Logger("Main");
 //#endregion
 
+//#region registrate directions
 var $injector = qvangular.$injector;
 utils.checkDirectiveIsRegistrated($injector, qvangular, "", AltStateDirectiveFactory("Altstateextension"),
     "AltStateExtension");
+//#endregion
 
 //#region extension properties
 let parameter = {
