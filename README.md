@@ -15,7 +15,7 @@ This extension was developed, to get alternate states into Qlik Sense. It is pos
 
 In the accessibillity options you can switch the use of shortcuts from the default values to customise shortcuts. The recommendation ist to use the combination of "strg + alt + {any keycode}", so that you do not get in truble with screenreaders shortcuts.
 
-![](./docs/screenshot_4.png?raw=true)
+![settings](./docs/screenshot_4.PNG?raw=true "Title")
 
 ## Install
 
