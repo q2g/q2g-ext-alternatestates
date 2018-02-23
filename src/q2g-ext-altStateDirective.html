@@ -5,6 +5,7 @@
     <table style="table-layout:fixed;">
         <tr>
             <td class="doublePage leftPage"
+                q2g-shortcut-scope
                 q2g-shortcut
                 shortcut="[{name:'escAltState', shortcut:'27'}]"
                 shortcut-action="vm.shortcutHandler(shortcutObject, domcontainer)">
@@ -23,7 +24,9 @@
 
                                           menu-visible="vm.showButtons"
                                           menu-callback="vm.menuListActionCallback(item)"
-                                          menu-list="vm.menuList">
+                                          menu-list="vm.menuList"
+                                          
+                                          shortcut-searchfield="vm.properties.shortcutFocusSearchField">
                     </q2g-extension-header>
                 </div>
                 <div ng-show="vm.altStateObject.calcCollection.length <= 0">
@@ -31,7 +34,11 @@
                         Please create an alternate State
                     </div>
                 </div>
-                <div ng-show="vm.altStateObject.calcCollection.length > 0">
+                <div ng-show="vm.altStateObject.calcCollection.length > 0"
+                     q2g-shortcut
+                     shortcut="[
+                        {name:'focusAltStateList', shortcut:vm.properties.shortcutFocusAltStateList, rootscope: '|global|'}]"
+                     shortcut-action="vm.shortcutHandler(shortcutObject, domcontainer)">
                     <q2g-listview ng-style="{'height': vm.elementHeight-42+'px'}"
                                   tabindex="0"
 
@@ -49,6 +56,7 @@
                 </div>
             </td>
             <td class="doublePage rightPage"
+                q2g-shortcut-scope
                 q2g-shortcut
                 shortcut="[{name:'escObjects', shortcut:'27'}]"
                 shortcut-action="vm.shortcutHandler(shortcutObject, domcontainer)">
@@ -66,10 +74,14 @@
                                             menu-callback="vm.menuListObjecsActionCallback(item)"
                                             menu-list="vm.menuListObjects"
                                             
-                                            shortcut-searchfield="'strg + alt + 83'">
+                                            shortcut-searchfield="vm.properties.shortcutFocusSearchField">
                     </q2g-extension-header>
                 </div>
-                <div>
+                <div q2g-shortcut
+                     shortcut="[
+                        {name:'focusObjectList', shortcut:vm.properties.shortcutFocusObjectList, rootscope: '|global|'},
+                        {name:'applySelection', shortcut:'13', preventdefault:true}]"
+                     shortcut-action="vm.shortcutHandler(shortcutObject, domcontainer)">
                     <q2g-listview ng-style="{'height': vm.elementHeight-42+'px'}"
                                   tabindex="0"
 

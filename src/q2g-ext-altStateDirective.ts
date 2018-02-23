@@ -10,6 +10,15 @@ import { QlikCollection,
 import "css!./q2g-ext-altStateDirective.css";
 //#endregion
 
+//#region interfaces
+export interface IShortcutProperties {
+    shortcutFocusAltStateList: string;
+    shortcutFocusSearchField: string;
+    shortcutFocusObjectList: string;
+    shortcutClearSelection: string;
+}
+//#endregion
+
 //#region global definitions
 
 const excludedObjects: Array<string> = [
@@ -38,31 +47,37 @@ enum eStateName {
 class AltStateController {
 
     //#region variables
-    app: EngineAPI.IApp;
-    scope: ng.IScope;
-    timeout: ng.ITimeoutService;
     altStateObject: AssistArrayAdapter<directives.IDataModelItem>;
-    qlikObject: QlikCollection;
-    addState: string;
-    element: JQuery;
-    theme: string;
+    app: EngineAPI.IApp;
     editMode: boolean = false;
+    element: JQuery;
+    focusedPositionAltState: number = 0;
+    focusedPositionQbject: number = 0;
+    inputBarFocus: boolean = false;
+    inputBarFocusObjects: boolean = false;
+    inputStates = new utils.StateMachineInput<eStateName>();
     menuList: Array<utils.IMenuElement>;
     menuListObjects: Array<utils.IMenuElement>;
-    showSearchFieldState = true;
-    showButtons = false;
-    showButtonsObjects = false;
-    titleAltState: string = "Alternate State";
-    inputStates = new utils.StateMachineInput<eStateName>();
-    showInputField: boolean = false;
-    inputBarFocus: boolean = false;
-    focusedPositionAltState: number;
-    showFocusedAltState: boolean = true;
-    showFocusedObject: boolean = true;
+    properties: IShortcutProperties = {
+        shortcutFocusAltStateList: " ",
+        shortcutFocusSearchField: " ",
+        shortcutFocusObjectList: " ",
+        shortcutClearSelection: " ",
+    };
+    qlikObject: QlikCollection;
+    scope: ng.IScope;
     selectedObjects: Array<string> = [];
     selectedRootObjects: Array<string> = [];
+    showButtons = false;
+    showButtonsObjects = false;
+    showFocusedAltState: boolean = false;
+    showFocusedObject: boolean = false;
+    showInputField: boolean = false;
     showInputFieldObjects: boolean = false;
-    inputBarFocusObjects: boolean = false;
+    showSearchFieldState = true;
+    theme: string;
+    timeout: ng.ITimeoutService;
+    titleAltState: string = "Alternate State";
     warningMsg: string;
     //#endregion
 
@@ -91,7 +106,14 @@ class AltStateController {
             let that: AltStateController = this;
             this.app = v.app;
             this.app.on("changed", function () {
-                this.app.getAppLayout()
+
+                v.getProperties()
+                    .then((res) => {
+                        return that.getProperties(res.properties);
+                    })
+                    .then(() => {
+                        return this.app.getAppLayout();
+                    })
                     .then((appLayout: EngineAPI.INxAppLayout) => {
                         let collection: Array<directives.IDataModelItem> = [];
                         for (const iterator of appLayout.qStateNames) {
@@ -114,6 +136,7 @@ class AltStateController {
                     .catch((error) => {
                         console.error("ERROR in get Layout ", error);
                     });
+
                 this.app.getAllInfos()
                     .then((appInfo: EngineAPI.INxInfo[]) => {
                         let objects: Array<Promise<void | EngineAPI.IGenericObjectProperties>> = [];
@@ -135,8 +158,10 @@ class AltStateController {
                                 return that.qlikObject.updateCollection(collection);
                             })
                             .then(() => {
-                                that.warningMsg = that.createWarningMessage();
-                                that.timeout();
+                                that.timeout(300)
+                                .then(() => {
+                                    that.warningMsg = that.createWarningMessage();
+                                });
                             })
                             .catch((error) => {
                                 console.error("ERROR IN CATCH",error);
@@ -441,6 +466,7 @@ class AltStateController {
      */
     private checkForMissingAlternateStates(): Array<string> {
         let listOfMissingAltStates: Array<string> = [];
+
         for (const object of this.qlikObject.collection) {
             let checker: boolean = false;
             if (object.state === "$") {
@@ -453,8 +479,8 @@ class AltStateController {
                     break;
                 }
             }
-            if (!checker) {
-                listOfMissingAltStates.push(object.title);
+            if (!checker && listOfMissingAltStates.indexOf(object.state) === -1) {
+                listOfMissingAltStates.push(object.state);
             }
         }
 
@@ -466,6 +492,7 @@ class AltStateController {
      */
     private createWarningMessage(): string {
         let msg: string = "";
+        setTimeout(500);
         let missingAltState: Array<string> = this.checkForMissingAlternateStates();
 
         if (missingAltState.length > 0) {
@@ -476,9 +503,24 @@ class AltStateController {
         return msg;
     }
 
+    /**
+     * saves the Properties from the getLayout call from qlik enine in own Object
+     * @param properties Properties from getLayout call
+     */
+    private getProperties(properties: any): Promise<boolean> {
+        return new Promise((resolve, reject) => {
+            this.properties.shortcutFocusAltStateList = properties.shortcutFocusAltStateList;
+            this.properties.shortcutFocusObjectList = properties.shortcutFocusObjectList;
+            this.properties.shortcutFocusSearchField = properties.shortcutFocusSearchField;
+            this.properties.shortcutClearSelection = properties.shortcutClearSelection;
+            resolve();
+        });
+    }
+
     //#endregion
 
     //#region public functions
+
     /**
      * checks if the extension is used in Edit mode
      */
@@ -532,7 +574,7 @@ class AltStateController {
     extensionHeaderAccept() {
         switch (this.inputStates.relStateName) {
             case eStateName.addAltState:
-            this.addAltState();
+                this.addAltState();
                 break;
         }
     }
@@ -571,7 +613,6 @@ class AltStateController {
         let indexNewState: number = this.selectedObjects.indexOf(selectedObject.id);
         let indexRootState: number = this.selectedRootObjects.indexOf(selectedObject.id);
 
-
         if (indexRootState>-1) {
             this.selectedRootObjects.splice(indexRootState,1);
             selectedObject.status = "S";
@@ -589,6 +630,7 @@ class AltStateController {
         }
 
         this.showButtonsObjects = true;
+        this.showFocusedAltState = true;
 
         if (this.selectedObjects.length > 0 || this.selectedRootObjects.length > 0) {
             this.menuListObjects[0].isEnabled = false;
@@ -603,7 +645,6 @@ class AltStateController {
      * @param objectShortcut object wich gives you the shortcut name and the element, from which the shortcut come from
      */
     shortcutHandler(shortcutObject: directives.IShortcutObject, domcontainer: utils.IDomContainer): boolean {
-
         switch (shortcutObject.name) {
             case "escAltState":
                 try {
@@ -626,6 +667,70 @@ class AltStateController {
                     this.logger.error("Error in shortcutHandlerExtensionHeader", e);
                     return false;
                 }
+            case "focusAltStateList":
+                try {
+                    this.showFocusedAltState = true;
+                    this.showFocusedObject = false;
+                    this.timeout();
+                    if (this.focusedPositionAltState < 0) {
+                        this.focusedPositionAltState = 0;
+                        domcontainer.element.children().children().children()[0].focus();
+                        this.timeout();
+                        return true;
+                    }
+
+                    if (this.focusedPositionAltState >= this.altStateObject.collection.length) {
+                        this.focusedPositionAltState = 0;
+                        domcontainer.element.children().children().children()[0].focus();
+                        this.timeout();
+                        return true;
+                    }
+
+                    if (this.focusedPositionAltState < this.altStateObject.itemsPageTop) {
+                        this.altStateObject.itemsPageTop = this.focusedPositionAltState;
+                    } else if (this.focusedPositionAltState >
+                        this.altStateObject.itemsPageTop + this.altStateObject.itemsPageSize) {
+                        this.altStateObject.itemsPageTop
+                            = this.focusedPositionAltState - (this.altStateObject.itemsPageSize + 1);
+
+                    }
+
+                    domcontainer.element.children().children().children().children()[
+                        this.focusedPositionAltState - this.altStateObject.itemsPageTop
+                    ].focus();
+                    return true;
+
+                } catch (error) {
+                    this.logger.error("Error in shortcutHandlerExtensionHeader", error);
+                    return false;
+                }
+            case "focusObjectList":
+                this.showFocusedAltState = false;
+                this.showFocusedObject = true;
+                this.timeout();
+                if (this.altStateObject.collection) {
+                    if (this.focusedPositionQbject < 0 ||
+                        this.focusedPositionQbject >= this.altStateObject.collection.length ||
+                        this.focusedPositionQbject >= this.altStateObject.itemsPageSize + this.altStateObject.itemsPageTop) {
+                        this.focusedPositionQbject = 0;
+                        this.altStateObject.itemsPageTop = 0;
+                        domcontainer.element.children().children().children().children()[0].focus();
+                        this.timeout();
+                        return true;
+                    }
+
+                    if (this.focusedPositionQbject < this.altStateObject.itemsPageTop) {
+                        this.altStateObject.itemsPageTop = this.focusedPositionQbject;
+                    } else if (this.focusedPositionQbject > this.altStateObject.itemsPageTop + this.altStateObject.itemsPageSize) {
+                        this.altStateObject.itemsPageTop = this.focusedPositionQbject - (this.altStateObject.itemsPageSize + 1);
+                    }
+                    domcontainer.element.children().children().children().children()[
+                        this.focusedPositionQbject - this.altStateObject.itemsPageTop
+                    ].focus();
+                }
+                return true;
+            case "applySelection":
+                this.menuListObjecsActionCallback("Apply State");
         }
     }
 
