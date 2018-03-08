@@ -1,9 +1,9 @@
 //#region imports
+import * as template                        from "text!./q2g-ext-altStateDirective.html";
+import { checkDirectiveIsRegistrated }      from "../node_modules/davinci.js/dist/umd/utils/utils";
 import { utils,
          directives,
          logging }                          from "../node_modules/davinci.js/dist/umd/daVinci";
-import * as template                        from "text!./q2g-ext-altStateDirective.html";
-import { checkDirectiveIsRegistrated }      from "../node_modules/davinci.js/dist/umd/utils/utils";
 import { QlikCollection,
          AssistArrayAdapter,
          QlikCollectionObject }             from "./q2g-ext-altStateCollection";
@@ -49,7 +49,6 @@ class AltStateController {
     //#region variables
     altStateObject: AssistArrayAdapter<directives.IDataModelItem>;
     app: EngineAPI.IApp;
-    editMode: boolean = false;
     element: JQuery;
     focusedPositionAltState: number = 0;
     focusedPositionQbject: number = 0;
@@ -81,6 +80,18 @@ class AltStateController {
     warningMsg: string;
     //#endregion
 
+    //#region editMode
+    private _editMode : boolean;
+    public get editMode() : boolean {
+        return this._editMode;
+    }
+    public set editMode(v : boolean) {
+        if (v !== this._editMode) {
+            this._editMode = v;
+        }
+    }
+    //#endregion
+
     //#region selectedAltState
     private _selectedAltState: string = "";
     public get selectedAltState() : string {
@@ -103,10 +114,58 @@ class AltStateController {
     public set model(v: EngineAPI.IGenericObject) {
         if (v !== this._model) {
             this._model = v;
-            let that: AltStateController = this;
             this.app = v.app;
-            this.app.on("changed", function () {
 
+            this.model.app.addAlternateState("q2gAssistStateDefault09832465021234")
+                .then(() => {
+                    return this.app.doSave();
+                })
+                .then(() => {
+                    return this.app.removeAlternateState("q2gAssistStateDefault09832465021234");
+                })
+                .then(() => {
+                    return this.app.doSave();
+                })
+            .catch((error) => {
+                this.logger.error("ERROR in setter of model when applying pseudo alt state", error);
+            })
+
+            const propertiesSheetList: EngineAPI.IGenericObjectProperties = {
+                qAppObjectListDef: {
+                    qData: {
+                        cells: "/cells",
+                        columns: "/columns",
+                        description: "/qMetaDef/description",
+                        descriptionExpression: "/descriptionExpression",
+                        labelExpression: "/labelExpression",
+                        rank: "/rank",
+                        rows: "/rows",
+                        thumbnail: "/thumbnail",
+                        title: "/qMetaDef/title"
+                    },
+                    qType: "sheet"
+                },
+                qInfo: {
+                    qId: "SheetList",
+                    qType: "SheetList"
+                }
+            }
+
+            this.app.createSessionObject(propertiesSheetList)
+                .then((object) => {
+                    object.on("changed", function () {
+                        this.app.emit("changed");
+                        this.getLayout();
+                    })
+                    object.emit("changed");
+                })
+            .catch((error) => {
+                this.logger.error("ERROR in setter of model when creating session object for sheelts", error);
+            });
+
+            let that: AltStateController = this;
+            this.app.on("changed", function () {
+                that.logger.info("CHANGED APP", "");
                 v.getProperties()
                     .then((res) => {
                         return that.getProperties(res.properties);
@@ -133,9 +192,9 @@ class AltStateController {
                             that.selectAltStateObjectCallback(0);
                         }
                     })
-                    .catch((error) => {
-                        console.error("ERROR in get Layout ", error);
-                    });
+                .catch((error) => {
+                    console.error("ERROR in get Layout ", error);
+                });
 
                 this.app.getAllInfos()
                     .then((appInfo: EngineAPI.INxInfo[]) => {
@@ -167,11 +226,13 @@ class AltStateController {
                                 console.error("ERROR IN CATCH",error);
                             });
                     })
-                    .catch((error) => {
-                        this.logger.error(error);
-                    });
+                .catch((error) => {
+                    this.logger.error(error);
+                });
+
             });
             this.app.emit("changed");
+
         }
     }
     //#endregion
@@ -299,8 +360,8 @@ class AltStateController {
     //#region private functions
 
     /**
-     * fills the Menu with Elements
-     */
+    * fills the Menu with Elements
+    */
     private initMenuElements(): void {
         this.menuList = [];
         this.menuList.push({
@@ -333,8 +394,8 @@ class AltStateController {
     }
 
     /**
-     * fills the Menu with Elements
-     */
+    * fills the Menu with Elements
+    */
     private initMenuElementsObjecs(): void {
         this.menuListObjects = [];
         this.menuListObjects.push({
@@ -349,8 +410,8 @@ class AltStateController {
     }
 
     /**
-     * applys the selected state to the selected objects
-     */
+    * applys the selected state to the selected objects
+    */
     private applyState() {
         for (const item of this.selectedObjects) {
             this.model.app.getObject(item)
@@ -362,6 +423,10 @@ class AltStateController {
                 })
                 .then((object) => {
                     this.app.emit("changed");
+                    return this.app.saveObjects();
+                })
+                .then((object) => {
+                    this.app.doSave();
                 })
                 .catch((error) => {
                     this.logger.error("error in applyStates", error);
@@ -378,6 +443,10 @@ class AltStateController {
                 })
                 .then((object) => {
                     this.app.emit("changed");
+                    return this.app.saveObjects();
+                })
+                .then((object) => {
+                    this.app.doSave();
                 })
                 .catch((error) => {
                     this.logger.error("error in applyStates", error);
@@ -386,37 +455,46 @@ class AltStateController {
     }
 
     /**
-     * adds a alternate state to the app
-     */
+    * adds a alternate state to the app
+    */
     private addAltState() {
-        this.model.app.addAlternateState(this.headerInput)
+        this.logger.info("addAltState", "");
+
+        this.app.addAlternateState(this.headerInput)
             .then(() => {
+                this.logger.info("addAltState inner", "");
                 this.headerInput = "";
                 this.showInputField = false;
+                return this.app.doSave();
             })
-            .catch((error) => {
-                this.logger.error("error in addAltState", error);
-            });
+        .catch((error) => {
+            this.logger.error("error in addAltState", error);
+        });
     }
 
     /**
-     * removes a slternate state from the app
-     */
+    * removes a slternate state from the app
+    */
     private removeAltState() {
+        this.logger.info("removeAltState", "");
+
         if (this.selectedAltState) {
-            this.model.app.removeAlternateState(this.selectedAltState)
+            this.app.removeAlternateState(this.selectedAltState)
                 .then(() => {
+                    this.logger.info("removeAltState inner", "");
+
                     this.selectedAltState = "";
+                    return this.app.doSave();
                 })
-                .catch((error) => {
-                    this.logger.error("Error in removeAltState", error);
-                });
+            .catch((error) => {
+                this.logger.error("Error in removeAltState", error);
+            });
         }
     }
 
     /**
-     * link actions to the buttens in the header directive
-     */
+    * link actions to the buttens in the header directive
+    */
     private applyButtonAction() {
         if(this.inputStates.relStateName === eStateName.addAltState) {
             this.addAltState();
@@ -424,8 +502,8 @@ class AltStateController {
     }
 
     /**
-     * controlling the options set to create a bookmark in the header input
-     */
+    * controlling the options set to create a bookmark in the header input
+    */
     private controllingInputBarOptions(type:eStateName): void {
 
         switch (type) {
@@ -446,8 +524,8 @@ class AltStateController {
     }
 
     /**
-     * initialisation of the stats from the input Bar
-     */
+    * initialisation of the stats from the input Bar
+    */
     private initInputStates(): void {
         let addAltStateState: utils.IStateMachineState<eStateName> = {
             name: eStateName.addAltState,
@@ -462,8 +540,8 @@ class AltStateController {
     }
 
     /**
-     * checks if all linked alternate states exists in the app
-     */
+    * checks if all linked alternate states exists in the app
+    */
     private checkForMissingAlternateStates(): Array<string> {
         let listOfMissingAltStates: Array<string> = [];
 
@@ -488,8 +566,8 @@ class AltStateController {
     }
 
     /**
-     * creates the warning message when objects have no registrated states
-     */
+    * creates the warning message when objects have no registrated states
+    */
     private createWarningMessage(): string {
         let msg: string = "";
         setTimeout(500);
@@ -504,9 +582,9 @@ class AltStateController {
     }
 
     /**
-     * saves the Properties from the getLayout call from qlik enine in own Object
-     * @param properties Properties from getLayout call
-     */
+    * saves the Properties from the getLayout call from qlik enine in own Object
+    * @param properties Properties from getLayout call
+    */
     private getProperties(properties: any): Promise<boolean> {
         return new Promise((resolve, reject) => {
             this.properties.shortcutFocusAltStateList = properties.shortcutFocusAltStateList;
@@ -522,8 +600,8 @@ class AltStateController {
     //#region public functions
 
     /**
-     * checks if the extension is used in Edit mode
-     */
+    * checks if the extension is used in Edit mode
+    */
     isEditMode(): boolean {
         if (this.editMode) {
             return true;
@@ -533,9 +611,9 @@ class AltStateController {
     }
 
     /**
-     * links functions to menu list
-     * @param input element returns from the extension header
-     */
+    * links functions to menu list
+    * @param input element returns from the extension header
+    */
     menuListActionCallback(input: string): void {
         switch (input) {
             case "Remove Alternate State":
@@ -553,9 +631,9 @@ class AltStateController {
     }
 
     /**
-     * links functions to menu list
-     * @param input element returns from the extension header
-     */
+    * links functions to menu list
+    * @param input element returns from the extension header
+    */
     menuListObjecsActionCallback(input: string): void {
         switch (input) {
             case "Apply State":
@@ -569,8 +647,8 @@ class AltStateController {
     }
 
     /**
-     * callback when enter on input field
-     */
+    * callback when enter on input field
+    */
     extensionHeaderAccept() {
         switch (this.inputStates.relStateName) {
             case eStateName.addAltState:
@@ -580,8 +658,8 @@ class AltStateController {
     }
 
     /**
-     * selectAltStateObjectCallback
-     */
+    * selectAltStateObjectCallback
+    */
     selectAltStateObjectCallback(pos: number) {
         this.selectedAltState = this.altStateObject.collection[pos].title;
         for (const item of this.altStateObject.collection) {
@@ -597,14 +675,14 @@ class AltStateController {
                 this.qlikObject.itemsCount = this.qlikObject.preCalcCollection.length;
                 this.timeout();
             })
-            .catch((error) => {
-                this.logger.error("error", error);
-            });
+        .catch((error) => {
+            this.logger.error("error", error);
+        });
     }
 
     /**
-     * selectObjectCallback
-     */
+    * selectObjectCallback
+    */
     selectObjectCallback(pos: number) {
         if (typeof(this.selectedAltState) === "undefined" || this.selectedAltState === "") {
             return;
@@ -641,9 +719,9 @@ class AltStateController {
     }
 
     /**
-     * shortcuthandler to clears the made selection
-     * @param objectShortcut object wich gives you the shortcut name and the element, from which the shortcut come from
-     */
+    * shortcuthandler to clears the made selection
+    * @param objectShortcut object wich gives you the shortcut name and the element, from which the shortcut come from
+    */
     shortcutHandler(shortcutObject: directives.IShortcutObject, domcontainer: utils.IDomContainer): boolean {
         switch (shortcutObject.name) {
             case "escAltState":
@@ -735,30 +813,31 @@ class AltStateController {
     }
 
     //#endregion
+
 }
 
 export function AltStateDirectiveFactory(rootNameSpace: string): ng.IDirectiveFactory {
     return($document: ng.IAugmentedJQuery, $injector: ng.auto.IInjectorService, $registrationProvider: any) => {
-        return {
-            restrict: "E",
-            replace: true,
-            template: utils.templateReplacer(template, rootNameSpace),
-            controller: AltStateController,
-            controllerAs: "vm",
-            scope: {},
-            bindToController: {
-                model: "<",
-                theme: "<?",
-                editMode: "<?"
-            },
-            compile: (): void => {
-                utils.checkDirectiveIsRegistrated($injector, $registrationProvider, rootNameSpace,
-                    directives.ListViewDirectiveFactory(rootNameSpace), "Listview");
-                utils.checkDirectiveIsRegistrated($injector, $registrationProvider, rootNameSpace,
-                    directives.ExtensionHeaderDirectiveFactory(rootNameSpace), "ExtensionHeader");
-                utils.checkDirectiveIsRegistrated($injector, $registrationProvider, rootNameSpace,
-                    directives.ShortCutDirectiveFactory(rootNameSpace), "Shortcut");
-            }
-        };
+    return {
+        restrict: "E",
+        replace: true,
+        template: utils.templateReplacer(template, rootNameSpace),
+        controller: AltStateController,
+        controllerAs: "vm",
+        scope: {},
+        bindToController: {
+            model: "<",
+            theme: "<?",
+            editMode: "<?"
+        },
+        compile: (): void => {
+            utils.checkDirectiveIsRegistrated($injector, $registrationProvider, rootNameSpace,
+                directives.ListViewDirectiveFactory(rootNameSpace), "Listview");
+            utils.checkDirectiveIsRegistrated($injector, $registrationProvider, rootNameSpace,
+                directives.ExtensionHeaderDirectiveFactory(rootNameSpace), "ExtensionHeader");
+            utils.checkDirectiveIsRegistrated($injector, $registrationProvider, rootNameSpace,
+                directives.ShortCutDirectiveFactory(rootNameSpace), "Shortcut");
+        }
+    };
     };
 }
