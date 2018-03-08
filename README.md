@@ -3,11 +3,14 @@
 [![TravisCI](https://travis-ci.org/q2g/q2g-ext-alternatestates.svg?branch=master)](https://travis-ci.org/q2g/q2g-ext-alternatestates)
 [![Downloads](https://m.sense2go.net/downloads.svg?q2g-ext-alternatestates)](https://m.sense2go.net/extension-package)
 
-This extension was developed, to get alternate states into Qlik Sense. It is possible to create as well as deleate alternate States, and apply the states to specific objects.
+This extension enables the user to take advantage of alternate states in qlik sense. With alternate states you can compare several states in one application.
+With these extension you can create and delete alternate states in the application. After you have a alternate state to use, you can apply this to the objects used in the application. After applying a state to an object, this will not react on selections made in objects without state, or applayed to a other state.
+
 
 ## Intro
 
 ![teaser](./docs/teaser.gif "Short teaser")
+
 
 ## Settings
 
@@ -16,6 +19,7 @@ This extension was developed, to get alternate states into Qlik Sense. It is pos
 In the accessibillity options you can switch the use of shortcuts from the default values to customise shortcuts. The recommendation ist to use the combination of "strg + alt + {any keycode}", so that you do not get in truble with screenreaders shortcuts.
 
 ![](./docs/screenshot_4.png?raw=true)
+
 
 ## Install
 
