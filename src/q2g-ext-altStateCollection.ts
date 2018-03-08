@@ -118,7 +118,6 @@ export class QlikCollectionObject implements IDataModelItemObject {
             };
             this.object.getProperties()
             .then((res) => {
-                console.log("asdgfsadgasdgdsafdsa", res);
                 if(typeof(res.qListObjectDef) === "object") {
                     res.qListObjectDef.qStateName = stateName;
                 } else if (typeof(res.qHyperCubeDef) === "object") {
@@ -126,13 +125,6 @@ export class QlikCollectionObject implements IDataModelItemObject {
                 }
                 return this.object.setProperties(res);
             })
-            // this.object.applyPatches([patchObject], false)
-                // .then(() => {
-                //     return this.object.getFullPropertyTree()
-                // })
-                // .then((res) => {
-                //     return this.object.setFullPropertyTree(res);
-                // })
                 .then(() => {
                     resolve(true);
                 })

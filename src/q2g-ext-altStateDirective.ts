@@ -467,7 +467,6 @@ class AltStateController {
         if (this.selectedAltState) {
             this.app.removeAlternateState(this.selectedAltState)
                 .then(() => {
-                    this.logger.info("removeAltState inner", "");
 
                     this.selectedAltState = "";
                     return this.app.doSave();
