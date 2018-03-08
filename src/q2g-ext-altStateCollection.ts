@@ -116,14 +116,22 @@ export class QlikCollectionObject implements IDataModelItemObject {
                 qOp: this.patchOperation,
                 qValue: "\""+stateName+"\""
             };
-            this.object.applyPatches([patchObject], false)
+            this.object.getProperties()
+            .then((res) => {
+                if(typeof(res.qListObjectDef) === "object") {
+                    res.qListObjectDef.qStateName = stateName;
+                } else if (typeof(res.qHyperCubeDef) === "object") {
+                    res.qHyperCubeDef.qStateName = stateName;
+                }
+                return this.object.setProperties(res);
+            })
                 .then(() => {
                     resolve(true);
                 })
-                .catch((error) => {
-                    this.logger.error("error in setState of QlikCollectionObject class: ", error);
-                    reject(error);
-                });
+            .catch((error) => {
+                this.logger.error("error in setState of QlikCollectionObject class: ", error);
+                reject(error);
+            });
         });
     }
 }
