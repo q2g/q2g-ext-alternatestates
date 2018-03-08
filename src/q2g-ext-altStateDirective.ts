@@ -360,8 +360,8 @@ class AltStateController {
     //#region private functions
 
     /**
-    * fills the Menu with Elements
-    */
+     * fills the Menu with Elements
+     */
     private initMenuElements(): void {
         this.menuList = [];
         this.menuList.push({
@@ -394,8 +394,8 @@ class AltStateController {
     }
 
     /**
-    * fills the Menu with Elements
-    */
+     * fills the Menu with Elements
+     */
     private initMenuElementsObjecs(): void {
         this.menuListObjects = [];
         this.menuListObjects.push({
@@ -410,53 +410,39 @@ class AltStateController {
     }
 
     /**
-    * applys the selected state to the selected objects
-    */
+     * applys the selected state to the selected objects
+     */
     private applyState() {
         for (const item of this.selectedObjects) {
-            this.model.app.getObject(item)
-                .then((res) => {
-                    return this.qlikObject.getObjectById(item);
-                })
+            this.qlikObject.getObjectById(item)
                 .then((object) => {
                     return object.setState(this.selectedAltState);
                 })
                 .then((object) => {
-                    this.app.emit("changed");
-                    return this.app.saveObjects();
-                })
-                .then((object) => {
                     this.app.doSave();
                 })
-                .catch((error) => {
-                    this.logger.error("error in applyStates", error);
-                });
+            .catch((error) => {
+                this.logger.error("error in applyStates", error);
+            });
         }
 
         for (const item of this.selectedRootObjects) {
-            this.model.app.getObject(item)
-                .then((res) => {
-                    return this.qlikObject.getObjectById(item);
-                })
+            this.qlikObject.getObjectById(item)
                 .then((object) => {
                     return object.setState("$");
                 })
                 .then((object) => {
-                    this.app.emit("changed");
-                    return this.app.saveObjects();
-                })
-                .then((object) => {
                     this.app.doSave();
                 })
-                .catch((error) => {
-                    this.logger.error("error in applyStates", error);
-                });
+            .catch((error) => {
+                this.logger.error("error in applyStates", error);
+            });
         }
     }
 
     /**
-    * adds a alternate state to the app
-    */
+     * adds a alternate state to the app
+     */
     private addAltState() {
         this.logger.info("addAltState", "");
 
@@ -473,8 +459,8 @@ class AltStateController {
     }
 
     /**
-    * removes a slternate state from the app
-    */
+     * removes a slternate state from the app
+     */
     private removeAltState() {
         this.logger.info("removeAltState", "");
 
@@ -493,8 +479,8 @@ class AltStateController {
     }
 
     /**
-    * link actions to the buttens in the header directive
-    */
+     * link actions to the buttens in the header directive
+     */
     private applyButtonAction() {
         if(this.inputStates.relStateName === eStateName.addAltState) {
             this.addAltState();
@@ -502,8 +488,8 @@ class AltStateController {
     }
 
     /**
-    * controlling the options set to create a bookmark in the header input
-    */
+     * controlling the options set to create a bookmark in the header input
+     */
     private controllingInputBarOptions(type:eStateName): void {
 
         switch (type) {
@@ -524,8 +510,8 @@ class AltStateController {
     }
 
     /**
-    * initialisation of the stats from the input Bar
-    */
+     * initialisation of the stats from the input Bar
+     */
     private initInputStates(): void {
         let addAltStateState: utils.IStateMachineState<eStateName> = {
             name: eStateName.addAltState,
@@ -540,8 +526,8 @@ class AltStateController {
     }
 
     /**
-    * checks if all linked alternate states exists in the app
-    */
+     * checks if all linked alternate states exists in the app
+     */
     private checkForMissingAlternateStates(): Array<string> {
         let listOfMissingAltStates: Array<string> = [];
 
@@ -566,8 +552,8 @@ class AltStateController {
     }
 
     /**
-    * creates the warning message when objects have no registrated states
-    */
+     * creates the warning message when objects have no registrated states
+     */
     private createWarningMessage(): string {
         let msg: string = "";
         setTimeout(500);
@@ -582,9 +568,9 @@ class AltStateController {
     }
 
     /**
-    * saves the Properties from the getLayout call from qlik enine in own Object
-    * @param properties Properties from getLayout call
-    */
+     * saves the Properties from the getLayout call from qlik enine in own Object
+     * @param properties Properties from getLayout call
+     */
     private getProperties(properties: any): Promise<boolean> {
         return new Promise((resolve, reject) => {
             this.properties.shortcutFocusAltStateList = properties.shortcutFocusAltStateList;
@@ -600,8 +586,8 @@ class AltStateController {
     //#region public functions
 
     /**
-    * checks if the extension is used in Edit mode
-    */
+     * checks if the extension is used in Edit mode
+     */
     isEditMode(): boolean {
         if (this.editMode) {
             return true;
@@ -611,9 +597,9 @@ class AltStateController {
     }
 
     /**
-    * links functions to menu list
-    * @param input element returns from the extension header
-    */
+     * links functions to menu list
+     * @param input element returns from the extension header
+     */
     menuListActionCallback(input: string): void {
         switch (input) {
             case "Remove Alternate State":
@@ -631,9 +617,9 @@ class AltStateController {
     }
 
     /**
-    * links functions to menu list
-    * @param input element returns from the extension header
-    */
+     * links functions to menu list
+     * @param input element returns from the extension header
+     */
     menuListObjecsActionCallback(input: string): void {
         switch (input) {
             case "Apply State":
@@ -647,8 +633,8 @@ class AltStateController {
     }
 
     /**
-    * callback when enter on input field
-    */
+     * callback when enter on input field
+     */
     extensionHeaderAccept() {
         switch (this.inputStates.relStateName) {
             case eStateName.addAltState:
@@ -658,8 +644,8 @@ class AltStateController {
     }
 
     /**
-    * selectAltStateObjectCallback
-    */
+     * selectAltStateObjectCallback
+     */
     selectAltStateObjectCallback(pos: number) {
         this.selectedAltState = this.altStateObject.collection[pos].title;
         for (const item of this.altStateObject.collection) {
@@ -681,8 +667,8 @@ class AltStateController {
     }
 
     /**
-    * selectObjectCallback
-    */
+     * selectObjectCallback
+     */
     selectObjectCallback(pos: number) {
         if (typeof(this.selectedAltState) === "undefined" || this.selectedAltState === "") {
             return;
@@ -719,9 +705,9 @@ class AltStateController {
     }
 
     /**
-    * shortcuthandler to clears the made selection
-    * @param objectShortcut object wich gives you the shortcut name and the element, from which the shortcut come from
-    */
+     * shortcuthandler to clears the made selection
+     * @param objectShortcut object wich gives you the shortcut name and the element, from which the shortcut come from
+     */
     shortcutHandler(shortcutObject: directives.IShortcutObject, domcontainer: utils.IDomContainer): boolean {
         switch (shortcutObject.name) {
             case "escAltState":
