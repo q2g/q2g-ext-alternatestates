@@ -1,6 +1,6 @@
 //#region imports
 import {directives,
-        logging }          from "../node_modules/davinci.js/dist/umd/daVinci";
+        logging }          from "./node_modules/davinci.js/dist/umd/daVinci";
 //#endregion
 
 //#region interfaces
