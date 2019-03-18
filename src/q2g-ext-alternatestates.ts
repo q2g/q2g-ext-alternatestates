@@ -2,7 +2,7 @@
 import * as qvangular from "qvangular";
 import * as qlik from "qlik";
 import * as template from "text!./q2g-ext-altStateExtension.html";
-import { utils, version, services, logging } from "../node_modules/davinci.js/dist/umd/daVinci";
+import { utils, version, services, logging } from "./node_modules/davinci.js/dist/umd/daVinci";
 import { AltStateDirectiveFactory } from "./q2g-ext-altStateDirective";
 //#endregion
 

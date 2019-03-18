@@ -1,9 +1,8 @@
 //#region imports
 import * as template                        from "text!./q2g-ext-altStateDirective.html";
-import { checkDirectiveIsRegistrated }      from "../node_modules/davinci.js/dist/umd/utils/utils";
 import { utils,
          directives,
-         logging }                          from "../node_modules/davinci.js/dist/umd/daVinci";
+         logging }                          from "./node_modules/davinci.js/dist/umd/daVinci";
 import { QlikCollection,
          AssistArrayAdapter,
          QlikCollectionObject }             from "./q2g-ext-altStateCollection";
