@@ -1,7 +1,7 @@
 # Alternate States Extension
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/9c7a375aadd64afabb3babdc060a209f)](https://app.codacy.com/app/konne/q2g-ext-alternatestates?utm_source=github.com&utm_medium=referral&utm_content=q2g/q2g-ext-alternatestates&utm_campaign=badger)
-[![TravisCI](https://travis-ci.org/q2g/q2g-ext-alternatestates.svg?branch=master)](https://travis-ci.org/q2g/q2g-ext-alternatestates)
-[![Downloads](https://m.sense2go.net/downloads.svg?q2g-ext-alternatestates)](https://m.sense2go.net/extension-package)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/4580d4d108514111bd66e6e1d1e1f151)](https://www.codacy.com/app/thomashaenig/q2g-ext-alternatestates?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=q2g/q2g-ext-alternatestates&amp;utm_campaign=Badge_Grade)
+[![TravisCI](https://travis-ci.com/q2g/q2g-ext-alternatestates.svg?branch=master)](https://travis-ci.org/q2g/q2g-ext-alternatestates)
+<a href="https://m.sense2go.net/extension-package"><img src="https://m.sense2go.net/downloads.svg" alt="drawing" width="130"/></a>
 
 This extension enables the user to take advantage of alternate states in qlik sense. With alternate states you can compare several states in one application.
 With these extension you can create and delete alternate states in the application. After you have a alternate state to use, you can apply this to the objects used in the application. After applying a state to an object, this will not react on selections made in objects without state, or applayed to a other state.
