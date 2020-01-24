@@ -554,7 +554,6 @@ class AltStateController {
      */
     private createWarningMessage(): string {
         let msg: string = "";
-        setTimeout(500);
         let missingAltState: Array<string> = this.checkForMissingAlternateStates();
 
         if (missingAltState.length > 0) {
